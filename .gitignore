@@ -1,0 +1,19 @@
+# Environments
+.venv
+
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+
+# Log
+log/
+
+# Jupyter notebook
+*.ipynb*
+
+# Develop toy or data
+*.pkl
+*.toy
+*.csv
+*.xlsx
+*.log
