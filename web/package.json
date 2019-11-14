@@ -1,0 +1,41 @@
+{
+  "name": "InvCo",
+  "version": "0.0.1",
+  "scripts": {
+    "build:pug": "pug ./index.pug --out dist --pretty",
+    "build:vue": "parcel build ./proj.js --public-url .",
+    "start": "concurrently --kill-others 'yarn run start:django' 'yarn run watch:vue'",
+    "start:django": "python3 manage.py runserver 0.0.0.0:$(/bin/cat port 2> /dev/null || /bin/echo 10122)",
+    "start:vue": "parcel ./index.dev.pug",
+    "watch:vue": "parcel watch ./proj.js --public-url ."
+  },
+  "repository": [
+    "git@github.com:alanaudi/InvCo.git"
+  ],
+  "author": [
+    "alanaudi <alanaudi.tw@gmail.com>",
+    "shanni33 <sunny3030730@gmail.com>",
+    "SWIvan <asd95175379@gmail.com>",
+    "HsinWeiLi <vivi5377@gmail.com>",
+    "kenny8654 <kenny8654@gmail.com>",
+    "apsttimmy <apsttimmy@gmail.com>",
+    "bigsamtw <bigsamtw@gmail.com>"
+  ],
+  "license": "All rights reserved",
+  "devDependencies": {
+    "@vue/component-compiler-utils": "^3.0.0",
+    "concurrently": "^4.1.2",
+    "parcel": "^1.12.3",
+    "pug": "^2.0.4",
+    "pug-cli": "^1.0.0-alpha6",
+    "sass": "^1.22.10",
+    "vue-template-compiler": "^2.6.10"
+  },
+  "dependencies": {
+    "axios": "^0.19.0",
+    "babel-polyfill": "^6.26.0",
+    "semantic-ui-offline": "^2.4.1-1",
+    "vue": ">=2.x.x",
+    "vue-hot-reload-api": "^2.3.3"
+  }
+}

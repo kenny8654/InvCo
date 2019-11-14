@@ -5,6 +5,10 @@
 __pycache__/
 *.py[cod]
 
+# Web
+node_modules/
+dist/
+
 # Log
 log/
 
