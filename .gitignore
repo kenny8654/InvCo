@@ -21,3 +21,6 @@ log/
 *.csv
 *.xlsx
 *.log
+
+tmp/
+download/
