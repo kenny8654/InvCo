@@ -8,6 +8,8 @@ __pycache__/
 # Web
 node_modules/
 dist/
+.cache/
+port
 
 # Log
 log/
