@@ -36,10 +36,7 @@ export default {
 
   methods: {
   readURL : function (event) {
-    console.log('pic : '+event.target.files[0].name)
     if (event.target.files[0].name) {
-      console.log('can read pic !')
-      console.log('0 -> ' + event.target.files[0].name)
       var reader = new FileReader();
       reader.onload = function(e) {
         $('.image-upload-wrap').hide();
@@ -59,14 +56,10 @@ export default {
   },
 
     removeUpload : function () {
-      // $('.file-upload-input').replaceWith($('.file-upload-input').clone());
       $('.file-upload-content').hide();
       $('.image-upload-wrap').show();
       $('.file-upload-input').show()
-      $('.file-upload-input').click(function() {
-        alert( "Handler for .click() called." );
-      })
-      console.log('remove btn');
+      
   }}}
 
 
