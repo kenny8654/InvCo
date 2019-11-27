@@ -19,3 +19,6 @@ def uploadImg(request):
     # ImgSave.objectscreate(img_url='image/%s'%img.name)
     # # return render(request, 'index.html')
     return HttpResponse('ok')
+
+def upload(request):
+    return render(request, 'upload.html')
