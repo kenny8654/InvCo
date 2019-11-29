@@ -20,5 +20,3 @@ def uploadImg(request):
     # # return render(request, 'index.html')
     return HttpResponse('ok')
 
-def upload(request):
-    return render(request, 'upload.html')
