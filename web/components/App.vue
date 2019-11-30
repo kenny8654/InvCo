@@ -81,7 +81,7 @@ export default {
 
   methods: {
     submitFile(){
-      $('.file-upload-input').trigger( 'click' )
+      // $('.file-upload-input').trigger( 'click' )
 
       let formData = new FormData();
       formData.append('image', this.file); //required
