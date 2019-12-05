@@ -7,6 +7,8 @@ import os
 import numpy as np
 import re
 nltk.download('punkt')
+# Local import
+from invco import DATASET_DIR
 
 def get_ingredient(det_ingr, replace_dict):
     det_ingr_lower = det_ingr['text'].lower()
@@ -138,5 +140,5 @@ def main(dir_file):
     build_vocab(dir_file)
 
 if __name__ == '__main__':
-    dir_file = ''
+    dir_file = F'{DATASET_DIR}/recipe1M_layers'
     main(dir_file)
