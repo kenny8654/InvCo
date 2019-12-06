@@ -18,7 +18,7 @@
         h2 Empty
     .row
   div.pusher(v-if="page==='home'")
-    .ui.internally.celled.grid.bg
+    .ui.internally.celled.grid
       .row 
         .thirteen.wide.column
           .ui.seven.stackable.cards
@@ -36,7 +36,7 @@
                 img(src="https://i.imgur.com/GWvodHn.png")
             
   div.pusher(v-else-if="page==='upload'")
-    .ui.internally.celled.grid.bg
+    .ui.internally.celled.grid
       .four.wide.column
       div
         div.file-upload-content
@@ -190,17 +190,12 @@ h3
   margin: 5px 0
 
 body
-  color : white
-  background-size: cover
-  background-position: center
-  height: 100vh
-  width: 100vw  
-
-.bg
   background-image: url(https://images.unsplash.com/photo-1472393365320-db77a5abbecc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2850&q=80)
   background-size: cover
   height: 100vh
   width: 100vw  
+  background-attachment: fixed
+
 
 .file-upload
   background-color: #ffffff
