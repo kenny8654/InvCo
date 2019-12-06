@@ -164,6 +164,7 @@ export default {
       }
       this.imgList = tmp_img_list;
       this.numberOfImages = count;
+      this.upload_status = "waiting";
     });
     }
   }
