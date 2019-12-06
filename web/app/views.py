@@ -1,3 +1,4 @@
+import os
 from django.shortcuts import render
 from django.conf import settings
 from django.http import HttpResponse
@@ -19,4 +20,10 @@ def uploadImg(request):
     # ImgSave.objectscreate(img_url='image/%s'%img.name)
     # # return render(request, 'index.html')
     return HttpResponse('ok')
+
+def getImages(request):
+    path = settings.MEDIA_ROOT
+    img_list = os.listdir(path + '/img')
+    response = {"images":img_list}
+    return HttpResponse(str(response))
 

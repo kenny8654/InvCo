@@ -1,4 +1,4 @@
-<template lang='pug'>
+<template lang='pug'> 
 #app
   .ui.visible.sidebar.left.inverted.vertical.menu
     div.title
@@ -11,23 +11,26 @@
   .ui.internally.celled.grid.pusher
     .row
       .four.wide.column
-        h2 Number of recipe  :{{recipe}}
+        h2 Number of recipes :{{recipe}}
       .four.wide.column
-        h2 Number of image  :{{image}}
+        h2 Number of image  : {{numberOfImages}}
       .four.wide.column
         h2 Empty
     .row
   div.pusher(v-if="page==='home'")
     .ui.internally.celled.grid.bg
       .row 
-        .fourteen.wide.column
-          .ui.eight.stackable.cards
+        .thirteen.wide.column
+          .ui.seven.stackable.cards
             .ui.link.card
               .image
                 img(src='https://i.imgur.com/yNwH3jV.jpg')
             .ui.link.card
               .image
                 img(src='https://i.imgur.com/yNwH3jV.jpg')
+            .ui.link.card(v-for='im in imgList')
+              .image
+                img(v-bind:src="im.url")          
             .ui.link.card(@click ='show_upload')
               .image
                 img(src="https://i.imgur.com/GWvodHn.png")
@@ -47,88 +50,124 @@
               h3 Drag and drop a file or select add Image
             
           div.file-upload
-            button.file-upload-btn(type='button' @click='submitFile()') Upload
-        
+            button.file-upload-btn(type='button' @click='submitFile()' v-if="upload_status==='waiting'") Upload
+          h3(v-if="upload_status==='success'") Success Uploaging
 </template>
 
 
 <script>
-import axios from 'axios'
-import 'semantic-ui-offline/semantic.min.css'
-import 'jquery'
-import $ from 'jquery'
+import axios from "axios";
+import "semantic-ui-offline/semantic.min.css";
+import "jquery";
+import $ from "jquery";
 
 export default {
-
   beforeDestory() {
-    document.removeEventListener('keyup', this.key)
+    document.removeEventListener("keyup", this.key);
   },
 
   created() {
-    document.addEventListener('keyup', this.key)
+    axios.get("/getImages").then(response => {
+      var img_list = JSON.parse(response.data.replace(/'/g, '"'));
+      var count = 0;
+      var tmp_img_list = []
+      console.log(img_list.images);
+      for(var img of img_list.images){
+        tmp_img_list.push({'url':'http://yichen.ee.ncku.edu.tw:10122/media/img/' + img + "?t="});
+        count++
+      }
+      this.imgList = tmp_img_list;
+      this.numberOfImages = count;
+    });
+    document.addEventListener("keyup", this.key);
   },
 
-  data() { return {
-    title: "Inverse Cooking",
-    recipe: 100,
-    image: 100,
-    page : "home",
-    selectedFile: null,
-    imageData: '',
-    file:'',
-    uploadPercentage: 0,
-  }},
+  data() {
+    return {
+      title: "Inverse Cooking",
+      recipe: 100,
+      numberOfImages: 0,
+      page: "home",
+      file: "",
+      uploadPercentage: 0,
+      imgList: "",
+      upload_status: "waiting"
+    };
+  },
 
   methods: {
-    submitFile(){
-      // $('.file-upload-input').trigger( 'click' )
-
+    submitFile() {
       let formData = new FormData();
-      formData.append('image', this.file); //required
-      console.log(formData.get('image'))
-      
-      axios.post('/upload/', formData, {
-        headers: {'X-CSRFToken': this.getCookie('csrftoken')}, 
-        onUploadProgress: function( progressEvent ) {
-          this.uploadPercentage = parseInt( Math.round( ( progressEvent.loaded * 100 ) / progressEvent.total ) );
-        }.bind(this)})
-        .then(response => {
-        console.log(response)
+      formData.append("image", this.file); //required
+      console.log(formData.get("image"));
+
+      axios
+        .post("/upload", formData, {
+          headers: { "X-CSRFToken": this.getCookie("csrftoken") },
+          onUploadProgress: function(progressEvent) {
+            this.uploadPercentage = parseInt(
+              Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            );
+          }.bind(this)
         })
-  },
-  handleFileUpload(event){
-    this.file = this.$refs.file.files[0]
-    var name = this.file.name
-    if (this.file) {
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        $('.image-upload-wrap').hide();
-        $('.file-upload-image').attr('src', e.target.result);
-        $('.file-upload-content').show();
-        $('.image-title').html(name);
-      };
-      reader.readAsDataURL(this.file);
+        .then(response => {
+          console.log(response);
+          if(response.status == '200'){
+            this.upload_status = "success"
+            console.log('success upload!')
+          }
+        });
+    },
+    handleFileUpload(event) {
+      this.file = this.$refs.file.files[0];
+      var name = this.file.name;
+      if (this.file) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          $(".image-upload-wrap").hide();
+          $(".file-upload-image").attr("src", e.target.result);
+          $(".file-upload-content").show();
+          $(".image-title").html(name);
+        };
+        reader.readAsDataURL(this.file);
       } else {
-        console.log('pic name is empty !') 
+        console.log("pic name is empty !");
         removeUpload();
-    }},
+      }
+    },
 
-    addImage : function () {
-    $('.file-upload-input').trigger( 'click' )
-  },
-  getCookie (name) {
-    var value = '; ' + document.cookie
-    var parts = value.split('; ' + name + '=')
-    if (parts.length === 2) return parts.pop().split(';').shift()
-  },
-  show_upload(){
-    this.page = 'upload'
-  },
-  show_home(){
-    this.page = 'home'
+    addImage: function() {
+      $(".file-upload-input").trigger("click");
+    },
+    getCookie(name) {
+      var value = "; " + document.cookie;
+      var parts = value.split("; " + name + "=");
+      if (parts.length === 2)
+        return parts
+          .pop()
+          .split(";")
+          .shift();
+    },
+    show_upload() {
+      this.page = "upload";
+    },
+    show_home() {
+      this.page = "home";
+      axios.get("/getImages").then(response => {
+      var img_list = JSON.parse(response.data.replace(/'/g, '"'));
+      var count = 0;
+      var tmp_img_list = []
+      console.log(img_list.images);
+      for(var img of img_list.images){
+        tmp_img_list.push({'url':'http://yichen.ee.ncku.edu.tw:10122/media/img/' + img + "?t="});
+        count++
+      }
+      this.imgList = tmp_img_list;
+      this.numberOfImages = count;
+    });
+    }
   }
-}}
-
+};
 </script>
 
 <style lang="sass">
@@ -137,6 +176,10 @@ h1
 
 h2
   color : black 
+
+h3
+  color : black 
+  text-align: center 
 
 .title
   padding: 20px 0 0 0
