@@ -4,7 +4,7 @@ import torch.utils.data as data
 import os
 import pickle as pk
 import numpy as np
-from build_vocab import Vocabulary
+from utils.ingrs_vocab import Vocabulary
 
 class RecipeDataset(data.Dataset):
     def __init__(self,dir_file,max_num_samples=-1,maxnumims=5,max_num_labels=20,split='train'):
