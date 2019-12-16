@@ -15,7 +15,7 @@ class RecipeDataset(data.Dataset):
                
         self.ingrs_vocab = pk.load(open(os.path.join(dir_file,'recipe1m_vocab_ingrs.pkl'), 'rb'))  # ingredients and their indexes
         self.instrs_vocab = pk.load(open(os.path.join(dir_file,'recipe1m_vocab_toks.pkl'), 'rb'))  # single words and their indexes
-        self.dataset = pk.load(open(os.path.join(dir_file,'recipe1m_test.pkl'), 'rb'))             # every recipe (id,instructions,tokenized,ingredients,images,title)
+        self.dataset = pk.load(open(os.path.join(dir_file,'recipe1m_'+split+'.pkl'), 'rb'))             # every recipe (id,instructions,tokenized,ingredients,images,title)
 
         # filter recipes that don't have image 
         self.ids = []
@@ -101,8 +101,8 @@ class RecipeDataset(data.Dataset):
         img = img_dir
         return img
 
-def get_loader(dir_file,batch_size=16,shuffle=False):
-    dataset = RecipeDataset(dir_file,split='train')
+def get_loader(dir_file,split,batch_size=16,shuffle=False):
+    dataset = RecipeDataset(dir_file,split=split)
 
     RecipeLoader = data.DataLoader(dataset=dataset,\
                                    batch_size=batch_size,\
