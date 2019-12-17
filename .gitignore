@@ -11,6 +11,8 @@ dist/
 .cache/
 test/
 yarn.lock
+port
+
 # Log
 log/
 
