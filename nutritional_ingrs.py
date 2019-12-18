@@ -5,12 +5,12 @@ from collections import Counter
 from itertools import zip_longest
 import json
 import os
-from tqdm import *
+from tqdm import tqdm
 import numpy as np
 import re
 nltk.download('punkt')
 # Local import
-from invco import DATASET_DIR
+#from invco import DATASET_DIR
 
 def get_ingredient(det_ingr, replace_dict):
     det_ingr_lower = det_ingr['text'].lower()
@@ -165,9 +165,9 @@ def build_vocab(dir_file):
     
     #open file
     print('Loading data')
-    dets = json.load(open(os.path.join(dir_file, 'det_ingrs.json'), 'r'))
-    layer1 = json.load(open(os.path.join(dir_file, 'layer1.json'), 'r'))
-    layer2 = json.load(open(os.path.join(dir_file, 'layer2+.json'), 'r'))
+    dets = json.load(open(os.path.join(dir_file, 'Recipe1M/det_ingrs.json'), 'r'))
+    layer1 = json.load(open(os.path.join(dir_file, 'Recipe1M/layer1.json'), 'r'))
+    layer2 = json.load(open(os.path.join(dir_file, 'Recipe1M/layer2+.json'), 'r'))
     nutritional = json.load(open(os.path.join(dir_file,'recipes_with_nutritional_info.json'), 'r'))
 
     replace_Ingrs = {'and': ['&',"'n"], 'cup': ['c.', 'cups'], 'tablespoon': ['tbsp', 'tablespoons'], 'teaspoon': ['teaspoons', 'ts'], '':  ['%', ',', '.', '#', '[', ']', '!', '?']}
@@ -321,5 +321,6 @@ def main(dir_file):
             pickle.dump(dataset[split], f)
 
 if __name__ == '__main__':
-    dir_file = F'{DATASET_DIR}/recipe1M_layers'
-    main(dir_file)
+    ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    DATASET_DIR = F'{ROOT_DIR}/InvCo/dataset/'
+    main(DATASET_DIR)
