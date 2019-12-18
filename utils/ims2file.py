@@ -43,7 +43,7 @@ def main(args):
                 if n == args.maxnumims:
                     break
                 if p.encode() not in present_entries:
-                    file_dir = os.path.join(root, p[0], p[1], p[2], p[3], p)
+                    file_dir = os.path.join(args.root, p[0], p[1], p[2], p[3], p)
                     if os.path.exists(file_dir):
                         im = load_and_resize(os.path.join(args.root, 'zip', split), p, args.imscale)
                         im = np.array(im).astype(np.uint8)
