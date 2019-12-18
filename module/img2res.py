@@ -26,6 +26,14 @@ transf_list_batch.append(transforms.Normalize((0.485, 0.456, 0.406),
                                               (0.229, 0.224, 0.225)))
 to_input_transf = transforms.Compose(transf_list_batch)
 
+transf_list = []
+transf_list.append(transforms.Resize(256))
+transf_list.append(transforms.CenterCrop(224))
+transform = transforms.Compose(transf_list)
+
+encoder_image = EncoderCNN(512, 0.3, 'resnet50')
+encoder_image = encoder_image.cuda()
+
 for item in tqdm(items):
     for j in item['images']:
         path = os.path.join(
@@ -34,16 +42,10 @@ for item in tqdm(items):
             dict_resnet_features = {}
             image = Image.open(path).convert('RGB')
 
-            transf_list = []
-            transf_list.append(transforms.Resize(256))
-            transf_list.append(transforms.CenterCrop(224))
-            transform = transforms.Compose(transf_list)
-
             image_transf = transform(image)
             image_tensor = to_input_transf(
                 image_transf).unsqueeze(0).to(device)
-            encoder_image = EncoderCNN(512, 0.3, 'resnet50')
-            encoder_image = encoder_image.cuda()
+
             feature = encoder_image.forward(image_tensor)
 
             dict_resnet_features['feature'] = feature
