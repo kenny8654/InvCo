@@ -18,7 +18,6 @@ class EncoderCNN(nn.Module):
 
     def forward(self, images, keep_cnn_gradients=False):
         """Extract feature vectors from input images."""
-
         if keep_cnn_gradients:
             raw_conv_feats = self.resnet(images)
         else:

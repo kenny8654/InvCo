@@ -9,6 +9,8 @@ __pycache__/
 node_modules/
 dist/
 .cache/
+test/
+yarn.lock
 port
 
 # Log
@@ -26,3 +28,4 @@ log/
 
 tmp/
 download/
+dataset/
