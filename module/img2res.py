@@ -1,9 +1,8 @@
 import pickle
-import pandas as pd
 import numpy as np
 import json
 import re
-from tqdm
+from tqdm import tqdm
 from uuid import uuid4
 import os
 import torch
@@ -11,6 +10,9 @@ from torch.utils.data import Dataset, DataLoader
 import urllib
 from PIL import Image
 from torchvision import transforms
+import matplotlib.pyplot as plt
+from torchvision import transforms
+from encoder import EncoderCNN
 
 
 items = pickle.load(open('../dataset/nutritional_filtered.pickle', 'rb'))
@@ -40,7 +42,8 @@ for item in tqdm(items):
             image_transf = transform(image)
             image_tensor = to_input_transf(
                 image_transf).unsqueeze(0).to(device)
-            encoder_image = EncoderCNN(512, 0.3, 'resnet101')
+            encoder_image = EncoderCNN(512, 0.3, 'resnet50')
+            encoder_image = encoder_image.cuda()
             feature = encoder_image.forward(image_tensor)
 
             dict_resnet_features['feature'] = feature
@@ -48,3 +51,6 @@ for item in tqdm(items):
             dict_resnet_features['ingredients'] = item['ingredients']
             dict_resnet_features['lights'] = item['lights']
             resnet_features.append(dict_resnet_features)
+file = open('../dataset/nutritional_training.pickle', 'wb')
+pickle.dump(resnet_features, file)
+file.close()

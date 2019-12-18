@@ -5,7 +5,7 @@ from collections import Counter
 from itertools import zip_longest
 import json
 import os
-from tqdm import *
+from tqdm import tqdm
 import numpy as np
 import re
 nltk.download('punkt')
