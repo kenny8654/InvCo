@@ -83,6 +83,9 @@ class RecipeDataset(data.Dataset):
     def __len__(self):
         return len(self.ids)
 
+    def get_ingrs_vocab_size(self):
+        return len(self.vocab_unit)
+
     def read_img(self,img_dir):
         #print('read img from:',img_dir)
         # add method to read img here :
@@ -92,11 +95,13 @@ class RecipeDataset(data.Dataset):
         img = img_dir
         return img
 
-def get_loader(dir_file,split,batch_size=4,shuffle=False):
+def get_loader(dir_file,split,batch_size=4,shuffle=False,num_workers=1,drop_last=False):
     dataset = RecipeDataset(dir_file,split=split)
 
     RecipeLoader = data.DataLoader(dataset=dataset,\
                                    batch_size=batch_size,\
-                                   shuffle=shuffle)
+                                   shuffle=shuffle,\
+                                   num_workers=num_workers,\
+                                   drop_last=drop_last)
 
     return RecipeLoader,dataset
