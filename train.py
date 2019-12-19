@@ -106,6 +106,27 @@ def main(args):
     print ("CNN params:", sum(p.numel() for p in params_cnn if p.requires_grad))
     print ("decoder params:", sum(p.numel() for p in params if p.requires_grad))
 
+    # start optimizing cnn from the beginning
+    if params_cnn is not None and args.finetune_after == 0:
+        optimizer = torch.optim.Adam([{'params': params}, {'params': params_cnn,
+                                                           'lr': args.learning_rate*args.scale_learning_rate_cnn}],
+                                     lr=args.learning_rate, weight_decay=args.weight_decay)
+        keep_cnn_gradients = True
+        print ("Fine tuning resnet")
+    else:
+        optimizer = torch.optim.Adam(params, lr=args.learning_rate)
+
+    if args.resume:
+        model_path = os.path.join(args.save_dir, args.project_name, args.model_name, 'checkpoints', 'model.ckpt')
+        optim_path = os.path.join(args.save_dir, args.project_name, args.model_name, 'checkpoints', 'optim.ckpt')
+        optimizer.load_state_dict(torch.load(optim_path, map_location=map_loc))
+        for state in optimizer.state.values():
+            for k, v in state.items():
+                if isinstance(v, torch.Tensor):
+                    state[k] = v.to(device)
+        model.load_state_dict(torch.load(model_path, map_location=map_loc))
+        
+
 if __name__ == '__main__':
     args = get_parser()
     main(args)
