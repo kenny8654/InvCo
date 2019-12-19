@@ -9,6 +9,29 @@ import numpy as np
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 import copy
 
+def make_positions(tensor, padding_idx, left_pad):
+    """Replace non-padding symbols with their position numbers.
+    Position numbers begin at padding_idx+1.
+    Padding symbols are ignored, but it is necessary to specify whether padding
+    is added on the left side (left_pad=True) or right side (left_pad=False).
+    """
+
+    # creates tensor from scratch - to avoid multigpu issues
+    max_pos = padding_idx + 1 + tensor.size(1)
+    #if not hasattr(make_positions, 'range_buf'):
+    range_buf = tensor.new()
+    #make_positions.range_buf = make_positions.range_buf.type_as(tensor)
+    if range_buf.numel() < max_pos:
+        torch.arange(padding_idx + 1, max_pos, out=range_buf)
+    mask = tensor.ne(padding_idx)
+    positions = range_buf[:tensor.size(1)].expand_as(tensor)
+    if left_pad:
+        positions = positions - mask.size(1) + mask.long().sum(dim=1).unsqueeze(1)
+
+    out = tensor.clone()
+    out = out.masked_scatter_(mask,positions[mask])
+    return out
+
 class TransformerDecoderLayer(nn.Module):
     """Decoder layer block."""
 
@@ -297,3 +320,12 @@ class SinusoidalPositionalEmbedding(nn.Module):
         """Maximum number of supported positions."""
         return int(1e5)  # an arbitrary large number
 
+def Linear(in_features, out_features, bias=True):
+    m = nn.Linear(in_features, out_features, bias)
+    nn.init.xavier_uniform_(m.weight)
+    nn.init.constant_(m.bias, 0.)
+    return m
+
+def LayerNorm(embedding_dim):
+    m = nn.LayerNorm(embedding_dim)
+    return m
