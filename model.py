@@ -39,7 +39,7 @@ def get_model(args, ingr_vocab_size):
     #                                   scale_embed_grad=False)
     
     # recipe loss
-    criterion = MaskedCrossEntropyCriterion(ignore_index=[instrs_vocab_size-1], reduce=False)
+    criterion = MaskedCrossEntropyCriterion(ignore_index=[ingr_vocab_size-1], reduce=False)
 
     # ingredients loss
     label_loss = nn.BCELoss(reduce=False)
