@@ -10,7 +10,7 @@ import pickle
 import os
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-def get_model(args, ingr_vocab_size, instrs_vocab_size):
+def get_model(args, ingr_vocab_size):
 
     # # build ingredients embedding
     # encoder_ingrs = EncoderLabels(args.embed_size, ingr_vocab_size,
