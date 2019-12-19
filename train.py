@@ -8,7 +8,7 @@ import random
 import pickle
 from utils.dataloader import get_loader
 from ingrs_vocab import Vocabulary
-# from model import get_model
+from model import get_model
 from torchvision import transforms
 import sys
 import json

@@ -4,10 +4,117 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.modules.utils import _single
 #import module.utils as utils
-#from module.multihead_attention import MultiheadAttention
+from module.multihead_attention import MultiheadAttention
 import numpy as np
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 import copy
+
+class TransformerDecoderLayer(nn.Module):
+    """Decoder layer block."""
+
+    def __init__(self, embed_dim, n_att, dropout=0.5, normalize_before=True, last_ln=False):
+        super().__init__()
+
+        self.embed_dim = embed_dim
+        self.dropout = dropout
+        self.relu_dropout = dropout
+        self.normalize_before = normalize_before
+        num_layer_norm = 3
+
+        # self-attention on generated recipe
+        self.self_attn = MultiheadAttention(
+            self.embed_dim, n_att,
+            dropout=dropout,
+        )
+
+        self.cond_att = MultiheadAttention(
+            self.embed_dim, n_att,
+            dropout=dropout,
+        )
+
+        self.fc1 = Linear(self.embed_dim, self.embed_dim)
+        self.fc2 = Linear(self.embed_dim, self.embed_dim)
+        self.layer_norms = nn.ModuleList([LayerNorm(self.embed_dim) for i in range(num_layer_norm)])
+        self.use_last_ln = last_ln
+        if self.use_last_ln:
+            self.last_ln = LayerNorm(self.embed_dim)
+
+    def forward(self, x, ingr_features, ingr_mask, incremental_state, img_features):
+
+        # self attention
+        residual = x
+        x = self.maybe_layer_norm(0, x, before=True)
+        x, _ = self.self_attn(
+            query=x,
+            key=x,
+            value=x,
+            mask_future_timesteps=True,
+            incremental_state=incremental_state,
+            need_weights=False,
+        )
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = residual + x
+        x = self.maybe_layer_norm(0, x, after=True)
+
+        residual = x
+        x = self.maybe_layer_norm(1, x, before=True)
+
+        # attention
+        if ingr_features is None:
+
+            x, _ = self.cond_att(query=x,
+                                    key=img_features,
+                                    value=img_features,
+                                    key_padding_mask=None,
+                                    incremental_state=incremental_state,
+                                    static_kv=True,
+                                    )
+        elif img_features is None:
+            x, _ = self.cond_att(query=x,
+                                    key=ingr_features,
+                                    value=ingr_features,
+                                    key_padding_mask=ingr_mask,
+                                    incremental_state=incremental_state,
+                                    static_kv=True,
+                                    )
+
+
+        else:
+            # attention on concatenation of encoder_out and encoder_aux, query self attn (x)
+            kv = torch.cat((img_features, ingr_features), 0)
+            mask = torch.cat((torch.zeros(img_features.shape[1], img_features.shape[0], dtype=torch.uint8).to(device),
+                              ingr_mask), 1)
+            x, _ = self.cond_att(query=x,
+                                    key=kv,
+                                    value=kv,
+                                    key_padding_mask=mask,
+                                    incremental_state=incremental_state,
+                                    static_kv=True,
+            )
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = residual + x
+        x = self.maybe_layer_norm(1, x, after=True)
+
+        residual = x
+        x = self.maybe_layer_norm(-1, x, before=True)
+        x = F.relu(self.fc1(x))
+        x = F.dropout(x, p=self.relu_dropout, training=self.training)
+        x = self.fc2(x)
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = residual + x
+        x = self.maybe_layer_norm(-1, x, after=True)
+
+        if self.use_last_ln:
+            x = self.last_ln(x)
+
+        return x
+
+    def maybe_layer_norm(self, i, x, before=False, after=False):
+        assert before ^ after
+        if after ^ self.normalize_before:
+            return self.layer_norms[i](x)
+        else:
+            return x
 
 class DecoderTransformer(nn.Module):
     """Transformer decoder."""
