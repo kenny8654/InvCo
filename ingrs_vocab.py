@@ -167,7 +167,7 @@ def build_vocab(dir_file):
     print('Loading data')
     dets = json.load(open(os.path.join(dir_file, 'det_ingrs.json'), 'r'))
     layer1 = json.load(open(os.path.join(dir_file, 'layer1.json'), 'r'))
-    layer2 = json.load(open(os.path.join(dir_file, 'layer2+.json'), 'r'))
+    layer2 = json.load(open(os.path.join(dir_file, 'layer2+.json'), 'r', encoding='utf-8'))
 
     #save rec_id via line
     id2im_pos = {}
@@ -187,6 +187,7 @@ def build_vocab(dir_file):
     # replace_units = {'and': ['&',"'n"], 'cup': ['c.', 'cups'], 'tablespoon': ['tbsp', 'tablespoons'], 'teaspoon': ['teaspoons', 'ts'], '':  ['%', ',', '.', '#', '[', ']', '!', '?', '-', 'to']}
 
     #Count words
+    dir_file = '/home/r8v10/git/InvCo/dataset/'
     ingrs_file = os.path.join(dir_file, 'allingrs_count.pkl')
     unit_file = os.path.join(dir_file, 'allingrs_unit.pkl')
     
@@ -277,7 +278,8 @@ def build_vocab(dir_file):
     
     
     # Pre-custom thesaurus
-    with open ('ingr_vocab.pkl', 'rb') as file:
+    ingrs_file_vocab = os.path.join(dir_file, 'ingr_vocab.pkl')
+    with open (ingrs_file_vocab, 'rb') as file:
         base_words = pickle.load(file)
 
     counter_ingrs.update(base_words)
@@ -392,6 +394,7 @@ def simplify_ingrs(_unit, ingr_candidate):
 def main(dir_file):
     # build_vocab(dir_file)
     vocab_ingrs, vocab_unit, dataset = build_vocab(dir_file)
+    dir_file = '/home/r8v10/git/InvCo/dataset/'
 
     with open(os.path.join(dir_file + 'recipe1m_vocab_ingrs.pkl'), 'wb') as f:
         pickle.dump(vocab_ingrs, f)
@@ -404,5 +407,5 @@ def main(dir_file):
             pickle.dump(dataset[split], f)
 
 if __name__ == '__main__':
-    dir_file = F'{DATASET_DIR}/recipe1M_layers'
+    dir_file = '/home/r8v10/git/InvCo/dataset/Recipe1M/'
     main(dir_file)
