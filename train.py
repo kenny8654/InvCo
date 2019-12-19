@@ -89,6 +89,23 @@ def main(args):
     ingr_vocab_size = datasets[split].get_ingrs_vocab_size()
     print('Length of ingredients:', ingr_vocab_size)
 
+    # Build the model
+    model = get_model(args, ingr_vocab_size)
+    keep_cnn_gradients = False
+
+    decay_factor = 1.0
+
+    # add model parameters
+    params = list(model.recipe_decoder.parameters()) 
+
+    # only train the linear layer in the encoder if we are not transfering from another model
+    if args.transfer_from == '':
+        params += list(model.image_encoder.linear.parameters())
+    params_cnn = list(model.image_encoder.resnet.parameters())
+
+    print ("CNN params:", sum(p.numel() for p in params_cnn if p.requires_grad))
+    print ("decoder params:", sum(p.numel() for p in params if p.requires_grad))
+
 if __name__ == '__main__':
     args = get_parser()
     main(args)
