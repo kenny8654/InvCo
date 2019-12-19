@@ -5,6 +5,7 @@ import os
 import pickle as pk
 import numpy as np
 from ingrs_vocab import Vocabulary
+import lmdb
 
 class RecipeDataset(data.Dataset):
     def __init__(self,dir_file,transform,max_num_samples=-1,maxnumims=5,max_num_labels=20,max_unit_len=150,split='train'):
@@ -67,7 +68,7 @@ class RecipeDataset(data.Dataset):
         
         #image_dir = os.path.join(self.dir_file,path[0], path[1], path[2], path[3], path)
 
-        print('path:',path)
+        #print('path:',path)
 
         image = self.read_img(path)
 
