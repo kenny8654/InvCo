@@ -7,7 +7,7 @@ import numpy as np
 from utils.ingrs_vocab import Vocabulary
 
 class RecipeDataset(data.Dataset):
-    def __init__(self,dir_file,max_num_samples=-1,maxnumims=5,max_num_labels=20,max_unit_len=150,split='train'):
+    def __init__(self,dir_file,transform,max_num_samples=-1,maxnumims=5,max_num_labels=20,max_unit_len=150,split='train'):
         
         self.maxnumims = maxnumims              # maximum number of images per recipe
         self.max_num_labels = max_num_labels    # max num of ingredients per recipe
@@ -15,6 +15,7 @@ class RecipeDataset(data.Dataset):
         self.split = split                      # train , val or test
 
         self.dir_file = dir_file
+        self.transform = transform
                
         #self.ingrs_vocab = pk.load(open(os.path.join(dir_file,'recipe1m_vocab_ingrs.pkl'), 'rb'))  # ingredients and their indexes
         self.vocab_unit = pk.load(open(os.path.join(dir_file,'recipe1m_vocab_unit.pkl'),'rb'))     # units , tokens and their indexes
@@ -107,11 +108,11 @@ class RecipeDataset(data.Dataset):
             print ("Image id not found in lmdb. Loading jpeg file...")
             image = Image.open(os.path.join(self.dir_file, path[0], path[1],\
                                             path[2], path[3], path)).convert('RGB')
+        image_input = self.transform(image)
+        return image_input
 
-        return image
-
-def get_loader(dir_file='/home/r8v10/git/InvCo/dataset/',split='train',batch_size=4,shuffle=False,num_workers=1,drop_last=False):
-    dataset = RecipeDataset(dir_file,split=split)
+def get_loader(dir_file='/home/r8v10/git/InvCo/dataset/',split='train',transform,batch_size=4,shuffle=False,num_workers=1,drop_last=False):
+    dataset = RecipeDataset(dir_file=dir_file,transform=transform,split=split)
 
     RecipeLoader = data.DataLoader(dataset=dataset,\
                                    batch_size=batch_size,\
