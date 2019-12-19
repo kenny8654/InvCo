@@ -81,13 +81,14 @@ def main(args):
 
         transform = transforms.Compose(transforms_list)
         max_num_samples = max(args.max_eval, args.batch_size) if split == 'val' else -1
-        data_loaders[split], datasets[split] = get_loader(data_dir, split,
-                                                          transform, args.batch_size,
+        data_loaders[split], datasets[split] = get_loader(transform, data_dir, 
+                                                          split, args.batch_size,
                                                           shuffle=split == 'train', num_workers=args.num_workers,
-                                                          drop_last=True,
-                                                          max_num_samples=max_num_samples,
-                                                          use_lmdb=args.use_lmdb,
-                                                          suff=args.suff)
+                                                          drop_last=True,)
         
     ingr_vocab_size = datasets[split].get_ingrs_vocab_size()
     print('Length of ingredients:', ingr_vocab_size)
+
+if __name__ == '__main__':
+    args = get_parser()
+    main(args)

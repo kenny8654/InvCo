@@ -24,7 +24,7 @@ def get_parser():
     parser.add_argument('--image_model', type=str, default='resnet50', choices=['resnet18', 'resnet50', 'resnet101',
                                                                                  'resnet152', 'inception_v3'])
 
-    parser.add_argument('--recipe1m_dir', type=str, default='path/to/recipe1m',
+    parser.add_argument('--recipe1m_dir', type=str, default='/home/r8v10/git/InvCo/dataset',
                         help='directory where recipe1m dataset is extracted')
 
     parser.add_argument('--aux_data_dir', type=str, default='../data',
@@ -68,7 +68,7 @@ def get_parser():
     parser.add_argument('--num_epochs', type=int, default=400,
                         help='maximum number of epochs')
 
-    parser.add_argument('--batch_size', type=int, default=128)
+    parser.add_argument('--batch_size', type=int, default=64)
 
     parser.add_argument('--num_workers', type=int, default=8)
 
