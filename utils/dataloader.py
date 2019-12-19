@@ -111,7 +111,7 @@ class RecipeDataset(data.Dataset):
         image_input = self.transform(image)
         return image_input
 
-def get_loader(dir_file='/home/r8v10/git/InvCo/dataset/',split='train',transform,batch_size=4,shuffle=False,num_workers=1,drop_last=False):
+def get_loader(transform,dir_file='/home/r8v10/git/InvCo/dataset/',split='train',batch_size=4,shuffle=False,num_workers=1,drop_last=False):
     dataset = RecipeDataset(dir_file=dir_file,transform=transform,split=split)
 
     RecipeLoader = data.DataLoader(dataset=dataset,\
