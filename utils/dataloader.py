@@ -34,6 +34,12 @@ class RecipeDataset(data.Dataset):
             random.shuffle(self.ids)
             self.ids = self.ids[:max_num_samples] 
 
+        # read lmdb file
+        self.image_file = lmdb.open(os.path.join(self.dir_file, 'lmdb_' + split), max_readers=1, readonly=True,\
+                                        lock=False, readahead=False, meminit=False)
+
+        
+
     def __getitem__(self,index):
 
         # get a recipe according to index
@@ -55,14 +61,14 @@ class RecipeDataset(data.Dataset):
         else:
             img_idx = 0
 
-        # the chosen img
+        # the chosen img.jpg
         path = img_paths[img_idx]
         
-        image_dir = os.path.join(self.dir_file,path[0], path[1], path[2], path[3], path)
+        #image_dir = os.path.join(self.dir_file,path[0], path[1], path[2], path[3], path)
 
-        #print('image_dir:',image_dir)
+        print('path:',path)
 
-        image = self.read_img(image_dir)
+        image = self.read_img(path)
 
         unit_idx = np.ones(self.max_unit_len) * self.vocab_unit('<pad>')
         pos2 = 0
@@ -86,16 +92,25 @@ class RecipeDataset(data.Dataset):
     def get_ingrs_vocab_size(self):
         return len(self.vocab_unit)
 
-    def read_img(self,img_dir):
+    def read_img(self,path):
         #print('read img from:',img_dir)
         # add method to read img here :
 
+        # get img from its path : img.jpg
+        try:
+            with self.image_file.begin(write=False) as txn:
+                image = txn.get(path.encode())
+                image = np.fromstring(image, dtype=np.uint8)
+                image = np.reshape(image, (256, 256, 3))
+            image = Image.fromarray(image.astype('uint8'), 'RGB')
+        except:
+            print ("Image id not found in lmdb. Loading jpeg file...")
+            image = Image.open(os.path.join(self.dir_file, path[0], path[1],\
+                                            path[2], path[3], path)).convert('RGB')
 
+        return image
 
-        img = img_dir
-        return img
-
-def get_loader(dir_file,split,batch_size=4,shuffle=False,num_workers=1,drop_last=False):
+def get_loader(dir_file='/home/r8v10/git/InvCo/dataset/',split='train',batch_size=4,shuffle=False,num_workers=1,drop_last=False):
     dataset = RecipeDataset(dir_file,split=split)
 
     RecipeLoader = data.DataLoader(dataset=dataset,\
