@@ -27,3 +27,27 @@ class EncoderCNN(nn.Module):
         features = features.view(features.size(0), features.size(1), -1)
 
         return features
+
+class EncoderLabels(nn.Module):
+    def __init__(self, embed_size, num_classes, dropout=0.5, embed_weights=None, scale_grad=False):
+
+        super(EncoderLabels, self).__init__()
+        embeddinglayer = nn.Embedding(num_classes, embed_size, padding_idx=num_classes-1, scale_grad_by_freq=scale_grad)
+        if embed_weights is not None:
+            embeddinglayer.weight.data.copy_(embed_weights)
+        self.pad_value = num_classes - 1
+        self.linear = embeddinglayer
+        self.dropout = dropout
+        self.embed_size = embed_size
+
+    def forward(self, x, onehot_flag=False):
+
+        if onehot_flag:
+            embeddings = torch.matmul(x, self.linear.weight)
+        else:
+            embeddings = self.linear(x)
+
+        embeddings = nn.functional.dropout(embeddings, p=self.dropout, training=self.training)
+        embeddings = embeddings.permute(0, 2, 1).contiguous()
+
+        return embeddings
