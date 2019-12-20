@@ -29,7 +29,7 @@ def main(args):
     parts = {}
     datasets = {}
     
-    for split in ['train', 'val', 'test']:
+    for split in ['val', 'test']:
         datasets[split] = pickle.load(open(os.path.join(args.save_dir, args.suff + 'recipe1m_' + split + '.pkl'), 'rb'))
 
         parts[split] = lmdb.open(os.path.join(args.save_dir, 'lmdb_'+split), map_size=int(MAX_SIZE))
@@ -42,9 +42,9 @@ def main(args):
             impaths = entry['images'][0:5]
 
             for p in impaths:
-                im_dir = os.path.join(args.root,'zip',split,p[0],p[1],p[2],p[3],p)
+                im_dir = os.path.join(args.root,split,p[0],p[1],p[2],p[3],p)
                 if os.path.exists(im_dir):
-                    im = load_and_resize(os.path.join(args.root, 'zip', split), p, args.imscale)
+                    im = load_and_resize(os.path.join(args.root, split), p, args.imscale)
                     im = np.array(im).astype(np.uint8)
                     with parts[split].begin(write=True) as txn:
                         txn.put(p.encode(), im)
