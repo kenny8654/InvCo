@@ -16,7 +16,7 @@ import time
 import torch.backends.cudnn as cudnn
 # from utils.tb_visualizer import Visualizer
 # from model import mask_from_eos, label2onehot
-# from utils.metrics import softIoU, compute_metrics, update_error_types
+from utils.metrics import softIoU, compute_metrics, update_error_types
 import random
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 map_loc = None if torch.cuda.is_available() else 'cpu'
