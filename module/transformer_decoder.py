@@ -15,7 +15,6 @@ def make_positions(tensor, padding_idx, left_pad):
     Padding symbols are ignored, but it is necessary to specify whether padding
     is added on the left side (left_pad=True) or right side (left_pad=False).
     """
-
     # creates tensor from scratch - to avoid multigpu issues
     max_pos = padding_idx + 1 + tensor.size(1)
     #if not hasattr(make_positions, 'range_buf'):
