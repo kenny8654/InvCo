@@ -28,31 +28,26 @@ def main(args):
 
     parts = {}
     datasets = {}
-    imname2pos = {'train': {}, 'val': {}, 'test': {}}
-    for split in ['train', 'val', 'test']:
+    
+    for split in ['val', 'test']:
         datasets[split] = pickle.load(open(os.path.join(args.save_dir, args.suff + 'recipe1m_' + split + '.pkl'), 'rb'))
 
         parts[split] = lmdb.open(os.path.join(args.save_dir, 'lmdb_'+split), map_size=int(MAX_SIZE))
-        with parts[split].begin() as txn:
-            present_entries = [key for key, _ in txn.cursor()]
-        j = 0
-        for i, entry in tqdm(enumerate(datasets[split])):
+
+        # with parts[split].begin() as txn:
+        #     present_entries = [key for key, _ in txn.cursor()]
+        # j = 0
+        
+        for entry in tqdm(datasets[split]):
             impaths = entry['images'][0:5]
 
-            for n, p in enumerate(impaths):
-                if n == args.maxnumims:
-                    break
-                file_dir = os.path.join(args.root, p[0], p[1], p[2], p[3], p)
-                if os.path.exists(file_dir):
-                    if p.encode() not in present_entries:
-                        im = load_and_resize(os.path.join(args.root, 'zip', split), p, args.imscale)
-                        im = np.array(im).astype(np.uint8)
-                        with parts[split].begin(write=True) as txn:
-                            txn.put(p.encode(), im)
-                    imname2pos[split][p] = j
-                    j += 1
-    pickle.dump(imname2pos, open(os.path.join(args.save_dir, 'imname2pos.pkl'), 'wb'))
-
+            for p in impaths:
+                im_dir = os.path.join(args.root,split,p[0],p[1],p[2],p[3],p)
+                if os.path.exists(im_dir):
+                    im = load_and_resize(os.path.join(args.root, split), p, args.imscale)
+                    im = np.array(im).astype(np.uint8)
+                    with parts[split].begin(write=True) as txn:
+                        txn.put(p.encode(), im)
 
 def test(args):
 
@@ -91,4 +86,4 @@ if __name__ == "__main__":
 
     if not args.test_only:
         main(args)
-    test(args)
+    #test(args)
