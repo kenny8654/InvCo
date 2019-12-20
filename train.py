@@ -8,7 +8,7 @@ import random
 import pickle
 from utils.dataloader import get_loader
 from ingrs_vocab import Vocabulary
-# from model import get_model
+from model import get_model
 from torchvision import transforms
 import sys
 import json
@@ -16,7 +16,7 @@ import time
 import torch.backends.cudnn as cudnn
 # from utils.tb_visualizer import Visualizer
 # from model import mask_from_eos, label2onehot
-# from utils.metrics import softIoU, compute_metrics, update_error_types
+from utils.metrics import softIoU, compute_metrics, update_error_types
 import random
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 map_loc = None if torch.cuda.is_available() else 'cpu'
@@ -81,13 +81,52 @@ def main(args):
 
         transform = transforms.Compose(transforms_list)
         max_num_samples = max(args.max_eval, args.batch_size) if split == 'val' else -1
-        data_loaders[split], datasets[split] = get_loader(data_dir, split,
-                                                          transform, args.batch_size,
+        data_loaders[split], datasets[split] = get_loader(transform, data_dir, 
+                                                          split, args.batch_size,
                                                           shuffle=split == 'train', num_workers=args.num_workers,
-                                                          drop_last=True,
-                                                          max_num_samples=max_num_samples,
-                                                          use_lmdb=args.use_lmdb,
-                                                          suff=args.suff)
+                                                          drop_last=True,)
         
     ingr_vocab_size = datasets[split].get_ingrs_vocab_size()
     print('Length of ingredients:', ingr_vocab_size)
+
+    # Build the model
+    model = get_model(args, ingr_vocab_size)
+    keep_cnn_gradients = False
+
+    decay_factor = 1.0
+
+    # add model parameters
+    params = list(model.recipe_decoder.parameters()) 
+
+    # only train the linear layer in the encoder if we are not transfering from another model
+    if args.transfer_from == '':
+        params += list(model.image_encoder.linear.parameters())
+    params_cnn = list(model.image_encoder.resnet.parameters())
+
+    print ("CNN params:", sum(p.numel() for p in params_cnn if p.requires_grad))
+    print ("decoder params:", sum(p.numel() for p in params if p.requires_grad))
+
+    # start optimizing cnn from the beginning
+    if params_cnn is not None and args.finetune_after == 0:
+        optimizer = torch.optim.Adam([{'params': params}, {'params': params_cnn,
+                                                           'lr': args.learning_rate*args.scale_learning_rate_cnn}],
+                                     lr=args.learning_rate, weight_decay=args.weight_decay)
+        keep_cnn_gradients = True
+        print ("Fine tuning resnet")
+    else:
+        optimizer = torch.optim.Adam(params, lr=args.learning_rate)
+
+    if args.resume:
+        model_path = os.path.join(args.save_dir, args.project_name, args.model_name, 'checkpoints', 'model.ckpt')
+        optim_path = os.path.join(args.save_dir, args.project_name, args.model_name, 'checkpoints', 'optim.ckpt')
+        optimizer.load_state_dict(torch.load(optim_path, map_location=map_loc))
+        for state in optimizer.state.values():
+            for k, v in state.items():
+                if isinstance(v, torch.Tensor):
+                    state[k] = v.to(device)
+        model.load_state_dict(torch.load(model_path, map_location=map_loc))
+        
+
+if __name__ == '__main__':
+    args = get_parser()
+    main(args)
