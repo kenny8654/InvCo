@@ -7,7 +7,6 @@ import argparse
 import lmdb
 from torchvision import transforms
 
-
 MAX_SIZE = 1e12
 
 
