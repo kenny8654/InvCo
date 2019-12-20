@@ -15,6 +15,7 @@ def get_model(args, ingr_vocab_size):
     # # build ingredients embedding
     # encoder_ingrs = EncoderLabels(args.embed_size, ingr_vocab_size,
     #                               args.dropout_encoder, scale_grad=False).to(device)
+    
     # build image model
     encoder_image = EncoderCNN(args.embed_size, args.dropout_encoder, args.image_model)
 
