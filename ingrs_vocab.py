@@ -392,7 +392,6 @@ def simplify_ingrs(_unit, ingr_candidate):
     return det_unit
 
 def main(dir_file):
-    # build_vocab(dir_file)
     vocab_ingrs, vocab_unit, dataset = build_vocab(dir_file)
     dir_file = '/home/r8v10/git/InvCo/dataset/'
 
