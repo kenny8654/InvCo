@@ -1,6 +1,7 @@
 import argparse
 import os
 
+
 def get_parser():
 
     parser = argparse.ArgumentParser()
@@ -20,7 +21,7 @@ def get_parser():
     parser.add_argument('--suff', type=str, default='',
                         help='the id of the dictionary to load for training')
 
-    parser.add_argument('--image_model', type=str, default='resnet50', choices=['resnet18', 'resnet50', 'resnet101',
+    parser.add_argument('--image_model', type=str, default='resnet18', choices=['resnet18', 'resnet50', 'resnet101',
                                                                                  'resnet152', 'inception_v3'])
 
     parser.add_argument('--recipe1m_dir', type=str, default='/home/r8v10/git/InvCo/dataset',
@@ -49,7 +50,7 @@ def get_parser():
 
     parser.add_argument('--weight_decay', type=float, default=0.)
 
-    parser.add_argument('--embed_size', type=int, default=512,
+    parser.add_argument('--embed_size', type=int, default=64,
                         help='hidden size for all projections')
 
     parser.add_argument('--n_att', type=int, default=8,
@@ -64,10 +65,10 @@ def get_parser():
     parser.add_argument('--transf_layers_ingrs', type=int, default=4,
                         help='number of transformer layers in the ingredient decoder')
 
-    parser.add_argument('--num_epochs', type=int, default=400,
+    parser.add_argument('--num_epochs', type=int, default=10,
                         help='maximum number of epochs')
 
-    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--batch_size', type=int, default=12)
 
     parser.add_argument('--num_workers', type=int, default=8)
 
@@ -130,7 +131,7 @@ def get_parser():
 
     parser.add_argument('--recipe_only', dest='recipe_only', action='store_true',
                         help='train or evaluate the model only for instruction generation')
-    parser.set_defaults(recipe_only=False)
+    parser.set_defaults(recipe_only=True)
 
     parser.add_argument('--log_term', dest='log_term', action='store_true',
                         help='if used, shows training log in stdout instead of saving it to a file.')
