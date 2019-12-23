@@ -77,16 +77,32 @@ class RecipeDataset(data.Dataset):
             image = self.transform(image)
 
         unit_idx = np.ones(self.max_unit_len) * self.vocab_unit('<pad>')
+
         pos2 = 0
-        # unit to idx
+
+        # add title to idx
+        for title_word in title:
+            idx = self.vocab_unit(title_word)
+            unit_idx[pos2] = idx
+            pos2 += 1
+
+        # add unit to idx
         for sentence in ingrs_unit:
+            if pos2 >= self.max_unit_len:
+                break
+            # add '<eoi>' between sentences
+            unit_idx[pos2] = self.vocab_unit('<eoi>')
+            pos2 += 1
             for token in sentence.split('_'):
-                idx = self.vocab_unit(token)
-                #print(idx,' : ',self.vocab_unit.idx2word[idx])
-                unit_idx[pos2] = idx
-                pos2 += 1
                 if pos2 >= self.max_unit_len:
                     break
+                idx = self.vocab_unit(token)
+                unit_idx[pos2] = idx
+                pos2 += 1
+                
+        if pos2 < self.max_unit_len:
+            unit_idx[pos2] = self.vocab_unit('<end>')
+
 
         labels_unit = torch.from_numpy(unit_idx).long()
 
@@ -99,7 +115,7 @@ class RecipeDataset(data.Dataset):
         return len(self.vocab_unit)
 
 def get_loader(transform,dir_file='/home/r8v10/git/InvCo/dataset/',split='train',batch_size=4,shuffle=False,num_workers=1,drop_last=False):
-    dataset = RecipeDataset(dir_file=dir_file,transform=transform,split=split)
+    dataset = RecipeDataset(dir_file=dir_file,transform=transform,split=split,max_num_samples=-1)
 
     RecipeLoader = data.DataLoader(dataset=dataset,\
                                    batch_size=batch_size,\
