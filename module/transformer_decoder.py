@@ -15,6 +15,7 @@ def make_positions(tensor, padding_idx, left_pad):
     Padding symbols are ignored, but it is necessary to specify whether padding
     is added on the left side (left_pad=True) or right side (left_pad=False).
     """
+
     # creates tensor from scratch - to avoid multigpu issues
     max_pos = padding_idx + 1 + tensor.size(1)
     #if not hasattr(make_positions, 'range_buf'):
@@ -61,7 +62,7 @@ class TransformerDecoderLayer(nn.Module):
         if self.use_last_ln:
             self.last_ln = LayerNorm(self.embed_dim)
 
-    def forward(self, x, ingr_features, ingr_mask, incremental_state, img_features):
+    def forward(self, x, incremental_state, img_features):
 
         # self attention
         residual = x
@@ -82,37 +83,14 @@ class TransformerDecoderLayer(nn.Module):
         x = self.maybe_layer_norm(1, x, before=True)
 
         # attention
-        if ingr_features is None:
-
-            x, _ = self.cond_att(query=x,
-                                    key=img_features,
-                                    value=img_features,
-                                    key_padding_mask=None,
-                                    incremental_state=incremental_state,
-                                    static_kv=True,
-                                    )
-        elif img_features is None:
-            x, _ = self.cond_att(query=x,
-                                    key=ingr_features,
-                                    value=ingr_features,
-                                    key_padding_mask=ingr_mask,
-                                    incremental_state=incremental_state,
-                                    static_kv=True,
+        x, _ = self.cond_att(query=x,
+                             key=img_features,
+                             value=img_features,
+                             key_padding_mask=None,
+                             incremental_state=incremental_state,
+                             static_kv=True,
                                     )
 
-
-        else:
-            # attention on concatenation of encoder_out and encoder_aux, query self attn (x)
-            kv = torch.cat((img_features, ingr_features), 0)
-            mask = torch.cat((torch.zeros(img_features.shape[1], img_features.shape[0], dtype=torch.uint8).to(device),
-                              ingr_mask), 1)
-            x, _ = self.cond_att(query=x,
-                                    key=kv,
-                                    value=kv,
-                                    key_padding_mask=mask,
-                                    incremental_state=incremental_state,
-                                    static_kv=True,
-            )
         x = F.dropout(x, p=self.dropout, training=self.training)
         x = residual + x
         x = self.maybe_layer_norm(1, x, after=True)
@@ -168,22 +146,13 @@ class DecoderTransformer(nn.Module):
 
         self.linear = Linear(embed_size, vocab_size-1)
 
-    def forward(self, ingr_features, ingr_mask, captions, img_features, incremental_state=None):
-
-        if ingr_features is not None:
-            ingr_features = ingr_features.permute(0, 2, 1)
-            ingr_features = ingr_features.transpose(0, 1)
-            if self.normalize_inputs:
-                self.layer_norms_in[0](ingr_features)
+    def forward(self, captions, img_features, incremental_state=None):
 
         if img_features is not None:
             img_features = img_features.permute(0, 2, 1)
             img_features = img_features.transpose(0, 1)
             if self.normalize_inputs:
                 self.layer_norms_in[1](img_features)
-
-        if ingr_mask is not None:
-            ingr_mask = (1-ingr_mask.squeeze(1)).byte()
 
         # embed positions
         if self.embed_positions is not None:
@@ -210,12 +179,10 @@ class DecoderTransformer(nn.Module):
         for p, layer in enumerate(self.layers):
             x  = layer(
                 x,
-                ingr_features,
-                ingr_mask,
                 incremental_state,
                 img_features
             )
-            
+
         # T x B x C -> B x T x C
         x = x.transpose(0, 1)
 
@@ -327,4 +294,9 @@ def Linear(in_features, out_features, bias=True):
 
 def LayerNorm(embedding_dim):
     m = nn.LayerNorm(embedding_dim)
+    return m
+
+def Embedding(num_embeddings, embedding_dim, padding_idx, ):
+    m = nn.Embedding(num_embeddings, embedding_dim, padding_idx=padding_idx)
+    nn.init.normal_(m.weight, mean=0, std=embedding_dim ** -0.5)
     return m
