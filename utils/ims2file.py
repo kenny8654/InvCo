@@ -29,7 +29,7 @@ def main(args):
     parts = {}
     datasets = {}
     
-    for split in ['val', 'test']:
+    for split in ['test']:
         datasets[split] = pickle.load(open(os.path.join(args.save_dir, args.suff + 'recipe1m_' + split + '.pkl'), 'rb'))
 
         parts[split] = lmdb.open(os.path.join(args.save_dir, 'lmdb_'+split), map_size=int(MAX_SIZE))

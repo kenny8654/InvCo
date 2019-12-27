@@ -50,7 +50,7 @@ def get_parser():
 
     parser.add_argument('--weight_decay', type=float, default=0.)
 
-    parser.add_argument('--embed_size', type=int, default=512,
+    parser.add_argument('--embed_size', type=int, default=128,
                         help='hidden size for all projections')
 
     parser.add_argument('--n_att', type=int, default=8,
@@ -65,10 +65,10 @@ def get_parser():
     parser.add_argument('--transf_layers_ingrs', type=int, default=4,
                         help='number of transformer layers in the ingredient decoder')
 
-    parser.add_argument('--num_epochs', type=int, default=400,
+    parser.add_argument('--num_epochs', type=int, default=50,
                         help='maximum number of epochs')
 
-    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--batch_size', type=int, default=10)
 
     parser.add_argument('--num_workers', type=int, default=8)
 
@@ -131,7 +131,7 @@ def get_parser():
 
     parser.add_argument('--recipe_only', dest='recipe_only', action='store_true',
                         help='train or evaluate the model only for instruction generation')
-    parser.set_defaults(recipe_only=False)
+    parser.set_defaults(recipe_only=True)
 
     parser.add_argument('--log_term', dest='log_term', action='store_true',
                         help='if used, shows training log in stdout instead of saving it to a file.')

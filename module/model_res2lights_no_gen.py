@@ -4,30 +4,31 @@ import json
 import re
 from tqdm import tqdm
 import pickle
-
-# Torch Modules
+from uuid import uuid4
+import os
+import urllib
+from PIL import Image
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
 import torch.utils.data as Data
 from torch.autograd import Variable
+from torchvision import transforms
+import matplotlib.pyplot as plt
+from torchvision import transforms
+from encoder import EncoderCNN
+
 
 class Model(nn.Module):
 
     def __init__(self):
         super(Model, self).__init__()
-
-        self.fc1 = nn.Linear(512 * 49, 3000)  
-        self.fc2 = nn.Linear(3000,3)
-        #self.fc3 = nn.Linear(500, 100)
-        #self.fc4 = nn.Linear(100,3)
+        self.fc1 = nn.Linear(512 * 49, 300)  
+        self.fc2 = nn.Linear(300,3)
 
     def forward(self, x):
-
         x = F.relu(self.fc1(x))
-        #x = F.relu(self.fc2(x))
-        #x = F.relu(self.fc3(x))
         x = F.softmax(self.fc2(x), dim=1)
         return x
 
@@ -44,8 +45,7 @@ torch.cuda.set_device(torch.device("cuda:" + str(device_id) if torch.cuda.is_ava
 torch.set_default_tensor_type('torch.cuda.FloatTensor')
 print('cuda',torch.cuda.is_available())
 
-BATCH_SIZE = 64
-epochs = 10
+
 items = pickle.load(open('../dataset/nutritional_training_all.pickle', 'rb'))
 features = []
 fats = []
@@ -65,12 +65,9 @@ del items
 #features = torch.stack(features).to(device)
 features = torch.stack(features).to('cpu')
 features = Variable(features, requires_grad=True)
-#features = features.requires_grad_()
-
-#fats = torch.FloatTensor(fats).to(device=device, dtype=torch.int64)
 fats = torch.FloatTensor(fats)
 #fats = torch.stack(fats).to(device)
-print(features, fats)
+# print(features, fats)
 torch_dataset = Data.TensorDataset(features,fats)
 loader = Data.DataLoader(
     dataset=torch_dataset,      # torch TensorDataset format
@@ -82,9 +79,7 @@ loader = Data.DataLoader(
 
 model = Model().to(device)
 print(model)
-#criterion = torch.nn.CrossEntropyLoss(reduce=False, size_average=False)
 criterion = nn.CrossEntropyLoss()
-#criterion = Variable(criterion, requires_grad = True)
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
 #optimizer = optim.SGD(model.parameters(), lr=0.001)
 torch.set_grad_enabled(True)
@@ -95,31 +90,22 @@ for e in range(epochs):
     totalcount = 0
     for feature, labels in tqdm(loader):
         optimizer.zero_grad()  # 避免上一個batch的gradient累積
-        #with torch.no_grad():
         feature = feature.to(device)
         labels = labels.to(device=device, dtype=torch.int64)
         output = model(feature)
-        #print('output : %s , labels : %s '%(output,labels))
-        #_, predicted = torch.max(output, 1)
-        #print('predicted : %s '%(predicted))
         loss = criterion(output, labels)
-        #_, predicted = torch.max(outputs, 1)
-        #loss.item()
-        #print('ouput : %s , predicted : %s , labels : %s '%('ouput','predicted','labels'))
         loss.backward()
-        #loss.item()
         optimizer.step()
-
         running_loss += loss.item()
         _, predicted = torch.max(output, 1)
         test = predicted == labels.long()
-        print('predicted : ',predicted)
-        print('labels : ',labels)
-        print('test : ',test)
+        # print('predicted : ',predicted)
+        # print('labels : ',labels)
+        # print('test : ',test)
         correct += test.sum().item()
         totalcount += len(test)
-        print('correct : ',correct)
-        print('totalcount : ',totalcount)
+        # print('correct : ',correct)
+        # print('totalcount : ',totalcount)
         del feature
         del labels
 

@@ -62,7 +62,7 @@ class TransformerDecoderLayer(nn.Module):
         if self.use_last_ln:
             self.last_ln = LayerNorm(self.embed_dim)
 
-    def forward(self, x, ingr_features, ingr_mask, incremental_state, img_features):
+    def forward(self, x, incremental_state, img_features):
 
         # self attention
         residual = x
@@ -83,37 +83,14 @@ class TransformerDecoderLayer(nn.Module):
         x = self.maybe_layer_norm(1, x, before=True)
 
         # attention
-        if ingr_features is None:
-
-            x, _ = self.cond_att(query=x,
-                                    key=img_features,
-                                    value=img_features,
-                                    key_padding_mask=None,
-                                    incremental_state=incremental_state,
-                                    static_kv=True,
-                                    )
-        elif img_features is None:
-            x, _ = self.cond_att(query=x,
-                                    key=ingr_features,
-                                    value=ingr_features,
-                                    key_padding_mask=ingr_mask,
-                                    incremental_state=incremental_state,
-                                    static_kv=True,
+        x, _ = self.cond_att(query=x,
+                             key=img_features,
+                             value=img_features,
+                             key_padding_mask=None,
+                             incremental_state=incremental_state,
+                             static_kv=True,
                                     )
 
-
-        else:
-            # attention on concatenation of encoder_out and encoder_aux, query self attn (x)
-            kv = torch.cat((img_features, ingr_features), 0)
-            mask = torch.cat((torch.zeros(img_features.shape[1], img_features.shape[0], dtype=torch.uint8).to(device),
-                              ingr_mask), 1)
-            x, _ = self.cond_att(query=x,
-                                    key=kv,
-                                    value=kv,
-                                    key_padding_mask=mask,
-                                    incremental_state=incremental_state,
-                                    static_kv=True,
-            )
         x = F.dropout(x, p=self.dropout, training=self.training)
         x = residual + x
         x = self.maybe_layer_norm(1, x, after=True)
@@ -169,22 +146,13 @@ class DecoderTransformer(nn.Module):
 
         self.linear = Linear(embed_size, vocab_size-1)
 
-    def forward(self, ingr_features, ingr_mask, captions, img_features, incremental_state=None):
-
-        if ingr_features is not None:
-            ingr_features = ingr_features.permute(0, 2, 1)
-            ingr_features = ingr_features.transpose(0, 1)
-            if self.normalize_inputs:
-                self.layer_norms_in[0](ingr_features)
+    def forward(self, captions, img_features, incremental_state=None):
 
         if img_features is not None:
             img_features = img_features.permute(0, 2, 1)
             img_features = img_features.transpose(0, 1)
             if self.normalize_inputs:
                 self.layer_norms_in[1](img_features)
-
-        if ingr_mask is not None:
-            ingr_mask = (1-ingr_mask.squeeze(1)).byte()
 
         # embed positions
         if self.embed_positions is not None:
@@ -211,12 +179,10 @@ class DecoderTransformer(nn.Module):
         for p, layer in enumerate(self.layers):
             x  = layer(
                 x,
-                ingr_features,
-                ingr_mask,
                 incremental_state,
                 img_features
             )
-            
+
         # T x B x C -> B x T x C
         x = x.transpose(0, 1)
 
@@ -224,6 +190,78 @@ class DecoderTransformer(nn.Module):
         _, predicted = x.max(dim=-1)
 
         return x, predicted
+
+    def sample(self, greedy=True, temperature=1.0, beam=-1,
+            img_features=None, first_token_value=0,
+            replacement=True, last_token_value=0):
+
+        incremental_state = {}
+
+        # create dummy previous word
+        fs = img_features.size(0)
+
+        if beam != -1:
+            if fs == 1:
+                return self.sample_beam(beam, img_features, first_token_value,
+                                        replacement, last_token_value)
+            else:
+                print ("Beam Search can only be used with batch size of 1. Running greedy or temperature sampling...")
+
+        first_word = torch.ones(fs)*first_token_value
+        first_word = first_word.to(device).long()
+        sampled_ids = [first_word]
+        logits = []
+
+        for i in range(self.seq_length):
+            # forward
+            outputs, _ = self.forward(torch.stack(sampled_ids, 1).to(device),
+                                        img_features, incremental_state)
+            outputs = outputs.squeeze(1)
+            if not replacement:
+                # predicted mask
+                if i == 0:
+                    predicted_mask = torch.zeros(outputs.shape).float().to(device)
+                else:
+                    # ensure no repetitions in sampling if replacement==False
+                    batch_ind = [j for j in range(fs) if sampled_ids[i][j] != 0]
+                    sampled_ids_new = sampled_ids[i][batch_ind]
+                    predicted_mask[batch_ind, sampled_ids_new] = float('-inf')
+
+                # mask previously selected ids
+                outputs += predicted_mask
+            logits.append(outputs)
+
+            if greedy:
+                outputs_prob = torch.nn.functional.softmax(outputs, dim=-1)
+                _, predicted = outputs_prob.max(1)
+                predicted = predicted.detach()
+            else:
+                k = 10
+                outputs_prob = torch.div(outputs.squeeze(1), temperature)
+                outputs_prob = torch.nn.functional.softmax(outputs_prob, dim=-1).data
+
+                # top k random sampling
+                prob_prev_topk, indices = torch.topk(outputs_prob, k=k, dim=1)
+                predicted = torch.multinomial(prob_prev_topk, 1).view(-1)
+                predicted = torch.index_select(indices, dim=1, index=predicted)[:, 0].detach()
+
+            sampled_ids.append(predicted)
+        sampled_ids = torch.stack(sampled_ids[1:], 1)
+        logits = torch.stack(logits, 1)
+
+        return sampled_ids, logits
+
+    def max_positions(self):
+        """Maximum output length supported by the decoder."""
+        return self.embed_positions.max_positions()
+
+    def upgrade_state_dict(self, state_dict):
+        if isinstance(self.embed_positions, SinusoidalPositionalEmbedding):
+            if 'decoder.embed_positions.weights' in state_dict:
+                del state_dict['decoder.embed_positions.weights']
+            if 'decoder.embed_positions._float_tensor' not in state_dict:
+                state_dict['decoder.embed_positions._float_tensor'] = torch.FloatTensor()
+        return state_dict
 
 def PositionalEmbedding(num_embeddings, embedding_dim, padding_idx, left_pad, learned=False):
     if learned:
@@ -328,4 +366,9 @@ def Linear(in_features, out_features, bias=True):
 
 def LayerNorm(embedding_dim):
     m = nn.LayerNorm(embedding_dim)
+    return m
+
+def Embedding(num_embeddings, embedding_dim, padding_idx, ):
+    m = nn.Embedding(num_embeddings, embedding_dim, padding_idx=padding_idx)
+    nn.init.normal_(m.weight, mean=0, std=embedding_dim ** -0.5)
     return m

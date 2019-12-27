@@ -14,19 +14,52 @@ import sys
 import json
 import time
 import torch.backends.cudnn as cudnn
-# from utils.tb_visualizer import Visualizer
-# from model import mask_from_eos, label2onehot
-# from utils.metrics import softIoU, compute_metrics, update_error_types
+from utils.tb_visualizer import Visualizer
+from model import mask_from_eos, label2onehot
+from utils.metrics import softIoU, compute_metrics, update_error_types
 import random
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 map_loc = None if torch.cuda.is_available() else 'cpu'
+
+def merge_models(args, model, ingr_vocab_size, instrs_vocab_size):
+    load_args = pickle.load(open(os.path.join(args.save_dir, args.project_name,
+        args.transfer_from, 'checkpoints/args.pkl'), 'rb'))
+
+    model_ingrs = get_model(load_args, ingr_vocab_size, instrs_vocab_size)
+    model_path = os.path.join(args.save_dir, args.project_name, args.transfer_from, 'checkpoints', 'modelbest.ckpt')
+
+    # Load the trained model parameters
+    model_ingrs.load_state_dict(torch.load(model_path, map_location=map_loc))
+    model.ingredient_decoder = model_ingrs.ingredient_decoder
+    args.transf_layers_ingrs = load_args.transf_layers_ingrs
+    args.n_att_ingrs = load_args.n_att_ingrs
+    return args, model
+
+def save_model(model, optimizer, checkpoints_dir, suff=''):
+    if torch.cuda.device_count() > 1:
+        torch.save(model.module.state_dict(), os.path.join(
+            checkpoints_dir, 'model' + suff + '.ckpt'))
+    else:
+        torch.save(model.state_dict(), os.path.join(
+            checkpoints_dir, 'model' + suff + '.ckpt'))
+
+    torch.save(optimizer.state_dict(), os.path.join(
+        checkpoints_dir, 'optim' + suff + '.ckpt'))
+
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+def set_lr(optimizer, decay_factor):
+    for group in optimizer.param_groups:
+        group['lr'] = group['lr']*decay_factor
 
 def make_dir(d):
     if not os.path.exists(d):
         os.makedirs(d)
 
 def main(args):
-    
+
     # Create model directory & other aux folders for logging
     where_to_save = os.path.join(args.save_dir, args.project_name, args.model_name)
     checkpoints_dir = os.path.join(where_to_save, 'checkpoints')
@@ -37,8 +70,8 @@ def main(args):
     make_dir(checkpoints_dir)
     make_dir(tb_logs)
 
-    # if args.tensorboard:
-    #     logger = Visualizer(tb_logs, name='visual_results')
+    if args.tensorboard:
+        logger = Visualizer(tb_logs, name='visual_results')
 
     # check if we want to resume from last checkpoint of current model
     if args.resume:
@@ -125,8 +158,193 @@ def main(args):
                 if isinstance(v, torch.Tensor):
                     state[k] = v.to(device)
         model.load_state_dict(torch.load(model_path, map_location=map_loc))
-        
+    
+    if args.transfer_from != '':
+        # loads CNN encoder from transfer_from model
+        model_path = os.path.join(args.save_dir, args.project_name, args.transfer_from, 'checkpoints', 'modelbest.ckpt')
+        pretrained_dict = torch.load(model_path, map_location=map_loc)
+        pretrained_dict = {k: v for k, v in pretrained_dict.items() if 'encoder' in k}
+        model.load_state_dict(pretrained_dict, strict=False)
+        args, model = merge_models(args, model, ingr_vocab_size, instrs_vocab_size)
+
+    if device != 'cpu' and torch.cuda.device_count() > 1:
+        model = nn.DataParallel(model)
+
+    model = model.to(device)
+    cudnn.benchmark = True
+
+    if not hasattr(args, 'current_epoch'):
+        args.current_epoch = 0
+
+    es_best = 10000 if args.es_metric == 'loss' else 0
+    # Train the model
+    start = args.current_epoch
+
+    for epoch in range(start, args.num_epochs):
+        # save current epoch for resuming
+        if args.tensorboard:
+            logger.reset()
+
+        args.current_epoch = epoch
+
+        # # increase / decrase values for moving params
+        if args.decay_lr:
+            frac = epoch // args.lr_decay_every
+            decay_factor = args.lr_decay_rate ** frac
+            new_lr = args.learning_rate*decay_factor
+            print ('Epoch %d. lr: %.5f'%(epoch, new_lr))
+            set_lr(optimizer, decay_factor)
+
+        if args.finetune_after != -1 and args.finetune_after < epoch \
+                and not keep_cnn_gradients and params_cnn is not None:
+
+            print("Starting to fine tune CNN")
+            # start with learning rates as they were (if decayed during training)
+            optimizer = torch.optim.Adam([{'params': params},
+                                          {'params': params_cnn,
+                                          'lr': decay_factor*args.learning_rate*args.scale_learning_rate_cnn}],
+                                          lr=decay_factor*args.learning_rate)
+
+            keep_cnn_gradients = True
+
+        for split in ['train', 'val']:
+            if split == 'train':
+                model.train()
+            else:
+                # model.eval()
+                #val still train
+                model.train()
+
+            total_step = len(data_loaders[split])
+            loader = iter(data_loaders[split])
+
+            total_loss_dict = {'recipe_loss': [], 'ingr_loss': [],
+                                'eos_loss': [], 'loss': [],
+                                'iou': [], 'perplexity': [], 'iou_sample': [],
+                                'f1': [],
+                                'card_penalty': []}
+
+            error_types = {'tp_i': 0, 'fp_i': 0, 'fn_i': 0, 'tn_i': 0,
+                            'tp_all': 0, 'fp_all': 0, 'fn_all': 0}
+
+            torch.cuda.synchronize()
+            start = time.time()
+
+            for i in range(total_step):
+                img_inputs, captions = loader.next()
+
+                img_inputs = img_inputs.to(device)
+                captions = captions.to(device)
+                true_caps_batch = captions.clone()[:, 1:].contiguous()
+                loss_dict = {}
+
+                if split == 'val':
+                    #with torch.no_grad():
+                    #    losses = model(img_inputs, captions)
+
+                    #val still train
+                    losses = model(img_inputs, captions,
+                                keep_cnn_gradients=keep_cnn_gradients)
+
+                else:
+                    losses = model(img_inputs, captions,
+                                keep_cnn_gradients=keep_cnn_gradients)
+
+                if not args.ingrs_only:
+                    recipe_loss = losses['recipe_loss']
+
+                    recipe_loss = recipe_loss.view(true_caps_batch.size())
+                    non_pad_mask = true_caps_batch.ne(ingr_vocab_size - 1).float()
+
+                    recipe_loss = torch.sum(recipe_loss*non_pad_mask, dim=-1) / torch.sum(non_pad_mask, dim=-1)
+                    perplexity = torch.exp(recipe_loss)
+
+                    recipe_loss = recipe_loss.mean()
+                    perplexity = perplexity.mean()
+
+                    loss_dict['recipe_loss'] = recipe_loss.item()
+                    loss_dict['perplexity'] = perplexity.item()
+
+                ingr_loss, eos_loss, card_penalty = 0, 0, 0
+                loss = args.loss_weight[0] * recipe_loss + args.loss_weight[1] * ingr_loss \
+                        + args.loss_weight[2]*eos_loss + args.loss_weight[3]*card_penalty
+
+                loss_dict['loss'] = loss.item()
+
+                for key in loss_dict.keys():
+                    total_loss_dict[key].append(loss_dict[key])
+
+                #if split == 'train':
+                #val still train
+                if split == 'train' or split == 'val':
+                    model.zero_grad()
+                    loss.backward()
+                    optimizer.step()
+
+                # Print log info
+                if args.log_step != -1 and i % args.log_step == 0:
+                    elapsed_time = time.time()-start
+                    lossesstr = ""
+                    for k in total_loss_dict.keys():
+                        if len(total_loss_dict[k]) == 0:
+                            continue
+                        this_one = "%s: %.4f" % (k, np.mean(total_loss_dict[k][-args.log_step:]))
+                        lossesstr += this_one + ', '
+                    # this only displays nll loss on captions, the rest of losses will be in tensorboard logs
+                    strtoprint = 'Split: %s, Epoch [%d/%d], Step [%d/%d], Losses: %sTime: %.4f' % (split, epoch,
+                                                                                                    args.num_epochs, i,
+                                                                                                    total_step,
+                                                                                                    lossesstr,
+                                                                                                    elapsed_time)
+                    print(strtoprint)
+
+                    if args.tensorboard:
+                        # logger.histo_summary(model=model, step=total_step * epoch + i)
+                        logger.scalar_summary(mode=split+'_iter', epoch=total_step*epoch+i,
+                                **{k: np.mean(v[-args.log_step:]) for k, v in total_loss_dict.items() if v})
+
+                    torch.cuda.synchronize()
+                    start = time.time()
+
+                del loss, losses, captions, img_inputs
+
+            if split == 'val' and not args.recipe_only:
+                ret_metrics = {'accuracy': [], 'f1': [], 'jaccard': [], 'f1_ingredients': [], 'dice': []}
+                compute_metrics(ret_metrics, error_types,
+                        ['accuracy', 'f1', 'jaccard', 'f1_ingredients', 'dice'], eps=1e-10,
+                        weights=None)
+
+                total_loss_dict['f1'] = ret_metrics['f1']
+
+            if args.tensorboard:
+                # 1. Log scalar values (scalar summary)
+                logger.scalar_summary(mode=split,
+                                      epoch=epoch,
+                                      **{k: np.mean(v) for k, v in total_loss_dict.items() if v})
+        # Save the model's best checkpoint if performance was improved# Save the model's best checkpoint if performance was improved
+        es_value = np.mean(total_loss_dict[args.es_metric])
+
+        # save current model as well
+        save_model(model, optimizer, checkpoints_dir, suff='')
+        if (args.es_metric == 'loss' and es_value < es_best) or (args.es_metric == 'iou_sample' and es_value > es_best):
+            es_best = es_value
+            save_model(model, optimizer, checkpoints_dir, suff='best')
+            pickle.dump(args, open(os.path.join(checkpoints_dir, 'args.pkl'), 'wb'))
+            curr_pat = 0
+            print('Saved checkpoint.')
+        else:
+            curr_pat += 1
+
+        if curr_pat > args.patience:
+            break
+
+    if args.tensorboard:
+        logger.close()
 
 if __name__ == '__main__':
     args = get_parser()
+    torch.manual_seed(1234)
+    torch.cuda.manual_seed(1234)
+    random.seed(1234)
+    np.random.seed(1234)
     main(args)
