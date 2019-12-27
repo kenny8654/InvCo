@@ -131,8 +131,9 @@ export default {
     axios.get("/getImages").then(response => {
       var img_list = JSON.parse(response.data.replace(/'/g, '"'));
       var count = 0;
-      var tmp_img_list = []
+      var tmp_img_list = [];
       console.log(img_list.images);
+
       for(var img of img_list.images){
         tmp_img_list.push({'url':'./media/img/' + img + "?t="});
         count++
@@ -227,9 +228,9 @@ export default {
         })
         .then(response => {
           console.log(response);
-          if(response.status == '200'){
-            this.upload_status = "success"
-            console.log('success upload!')
+          if (response.status == "200") {
+            this.upload_status = "success";
+            console.log("success upload!");
           }
         });
     },
@@ -268,6 +269,7 @@ export default {
     show_home() {
       this.page = "home";
       axios.get("/getImages").then(response => {
+
       var img_list = JSON.parse(response.data.replace(/'/g, '"'));
       var count = 0;
       var tmp_img_list = []
