@@ -9,6 +9,7 @@ from torch.nn.modules.loss import _WeightedLoss
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 map_loc = None if torch.cuda.is_available() else 'cpu'
 
+
 class MaskedCrossEntropyCriterion(_WeightedLoss):
 
     def __init__(self, ignore_index=[-100], reduce=None):
