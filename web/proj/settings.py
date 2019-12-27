@@ -30,7 +30,11 @@ SECRET_KEY = 'nnip(cvwsspnzpa9x1+$_!4v#3r$@dvi%_m9sx2nlf5b^u-xoh'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+<<<<<<< HEAD
 ALLOWED_HOSTS = ['merry.ee.ncku.edu.tw', 'localhost', 'yichen.ee.ncku.edu.tw']
+=======
+ALLOWED_HOSTS = ['merry.ee.ncku.edu.tw', 'localhost','140.116.72.90']
+>>>>>>> master
 
 
 # Application definition
