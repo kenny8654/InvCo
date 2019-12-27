@@ -2,7 +2,11 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-
+from app.res2lights import Res2lights, EncoderCNN, Model
+# from app.demo2 import Demo
+# from app.ingrs_vocab import Vocabulary
+# from app.args import *
+# from .InvCo import *
 
 def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'proj.settings')

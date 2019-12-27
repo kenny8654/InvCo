@@ -116,7 +116,6 @@
 
 
 <script>
-
 import axios from "axios";
 import "semantic-ui-offline/semantic.min.css";
 import "jquery";
@@ -134,9 +133,9 @@ export default {
       var tmp_img_list = [];
       console.log(img_list.images);
 
-      for(var img of img_list.images){
-        tmp_img_list.push({'url':'./media/img/' + img + "?t="});
-        count++
+      for (var img of img_list.images) {
+        tmp_img_list.push({ url: "./media/img/" + img + "?t=" });
+        count++;
       }
       this.imgList = tmp_img_list;
       this.numberOfImages = count;
@@ -154,12 +153,12 @@ export default {
       uploadPercentage: 0,
       imgList: "",
       upload_status: "waiting",
-      genderInput: '',
-      ageInput: '',
-      activityInput: '',
-      heightInput: '',
-      weightInput: '',
-      calories: '',
+      genderInput: "",
+      ageInput: "",
+      activityInput: "",
+      heightInput: "",
+      weightInput: "",
+      calories: "",
       output: 0
     };
   },
@@ -167,36 +166,31 @@ export default {
     bmi() {
       var weight = this.weightInput;
       var height = this.heightInput;
-      var formula = weight/(height*height)*10000;
+      var formula = (weight / (height * height)) * 10000;
       formula = formula.toFixed(2);
       return formula;
     },
     to_maintain() {
-      var calories = 0, bmr = 0
+      var calories = 0,
+        bmr = 0;
       var gender = this.genderInput;
       var age = this.ageInput;
       var activity = this.activityInput;
       var height = this.heightInput;
       var weight = this.weightInput;
 
-      if (gender == 'male')
-        bmr = 88.362 + (13.397*weight) + (4.799*height) - (5.677*age);
-      else if (gender == 'female')
-        bmr = 447.593 + (9.247*weight) + (3.098*height) - (4.330*age);
+      if (gender == "male")
+        bmr = 88.362 + 13.397 * weight + 4.799 * height - 5.677 * age;
+      else if (gender == "female")
+        bmr = 447.593 + 9.247 * weight + 3.098 * height - 4.33 * age;
       else bmr = 0;
-      
-      if (activity == 'bmr')
-        calories = bmr;
-      else if (activity == 'sedentary')
-        calories = 1.2*bmr;
-      else if (activity == "lightlyActive")
-        calories = 1.375*bmr;
-      else if (activity == "moderatelyActive")
-        calories = 1.55*bmr;
-      else if (activity =="veryActive" )
-        calories = 1.725*bmr;
-      else if (activity == "extraActive")
-        calories = 1.9*bmr;
+
+      if (activity == "bmr") calories = bmr;
+      else if (activity == "sedentary") calories = 1.2 * bmr;
+      else if (activity == "lightlyActive") calories = 1.375 * bmr;
+      else if (activity == "moderatelyActive") calories = 1.55 * bmr;
+      else if (activity == "veryActive") calories = 1.725 * bmr;
+      else if (activity == "extraActive") calories = 1.9 * bmr;
       else calories = 0;
 
       this.calories = calories;
@@ -212,11 +206,10 @@ export default {
     }
   },
   methods: {
-<<<<<<< HEAD
     submitFile() {
       let formData = new FormData();
       formData.append("image", this.file); //required
-      console.log(formData.get("image"));
+      console.log("form : ", formData.get("image"));
 
       axios
         .post("/upload", formData, {
@@ -247,18 +240,6 @@ export default {
           $(".image-title").html(name);
         };
         reader.readAsDataURL(this.file);
-=======
-  readURL : function (event) {
-    if (event.target.files[0].name) {
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        $('.image-upload-wrap').hide();
-        $('.file-upload-image').attr('src', e.target.result);
-        $('.file-upload-content').show();
-        $('.image-title').html(event.target.files[0].name);
-      };
-      reader.readAsDataURL(event.target.files[0]);
->>>>>>> master
       } else {
         console.log("pic name is empty !");
         removeUpload();
@@ -282,58 +263,43 @@ export default {
     show_home() {
       this.page = "home";
       axios.get("/getImages").then(response => {
-
-<<<<<<< HEAD
-      var img_list = JSON.parse(response.data.replace(/'/g, '"'));
-      var count = 0;
-      var tmp_img_list = []
-      console.log(img_list.images);
-      for(var img of img_list.images){
-        tmp_img_list.push({'url':'./media/img/' + img + "?t="});
-        count++
-      }
-      this.imgList = tmp_img_list;
-      this.numberOfImages = count;
-      this.upload_status = "waiting";
-    });
+        var img_list = JSON.parse(response.data.replace(/'/g, '"'));
+        var count = 0;
+        var tmp_img_list = [];
+        console.log(img_list.images);
+        for (var img of img_list.images) {
+          tmp_img_list.push({ url: "./media/img/" + img + "?t=" });
+          count++;
+        }
+        this.imgList = tmp_img_list;
+        this.numberOfImages = count;
+        this.upload_status = "waiting";
+      });
     },
     show_profile() {
       this.page = "profile";
     },
     calculate_calories() {
-      var calories = 0, bmr = 0
+      var calories = 0,
+        bmr = 0;
       var gender = this.genderInput;
       var age = this.ageInput;
       var activity = this.activityInput;
       var height = this.heightInput;
       var weight = this.weightInput;
-=======
-    removeUpload : function () {
-      $('.file-upload-content').hide();
-      $('.image-upload-wrap').show();
-      $('.file-upload-input').show()
-      
-  }}}
->>>>>>> master
 
-      if (gender == 'male')
-        bmr = 88.362 + (13.397*weight) + (4.799*height) - (5.677*age);
-      else if (gender == 'female')
-        bmr = 447.593 + (9.247*weight) + (3.098*height) - (4.330*age);
+      if (gender == "male")
+        bmr = 88.362 + 13.397 * weight + 4.799 * height - 5.677 * age;
+      else if (gender == "female")
+        bmr = 447.593 + 9.247 * weight + 3.098 * height - 4.33 * age;
       else bmr = 0;
-      
-      if (activity == 'bmr')
-        calories = bmr;
-      else if (activity == 'sedentary')
-        calories = 1.2*bmr;
-      else if (activity == "lightlyActive")
-        calories = 1.375*bmr;
-      else if (activity == "moderatelyActive")
-        calories = 1.55*bmr;
-      else if (activity =="veryActive" )
-        calories = 1.725*bmr;
-      else if (activity == "extraActive")
-        calories = 1.9*bmr;
+
+      if (activity == "bmr") calories = bmr;
+      else if (activity == "sedentary") calories = 1.2 * bmr;
+      else if (activity == "lightlyActive") calories = 1.375 * bmr;
+      else if (activity == "moderatelyActive") calories = 1.55 * bmr;
+      else if (activity == "veryActive") calories = 1.725 * bmr;
+      else if (activity == "extraActive") calories = 1.9 * bmr;
       else calories = 0;
 
       this.calories = calories;

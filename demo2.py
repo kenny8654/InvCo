@@ -5,6 +5,7 @@ import numpy as np
 import os
 from args import get_parser
 import pickle
+import json
 from model import get_model
 from torchvision import transforms
 from PIL import Image
@@ -16,8 +17,9 @@ from io import BytesIO
 import random
 from collections import Counter
 
-def main(dir_file, image_folder, demo_path):
+def main(dir_file, image_folder, demo_path, lights):
     use_gpu = True
+    
     device = torch.device('cuda' if torch.cuda.is_available() and use_gpu else 'cpu')
     map_loc = None if torch.cuda.is_available() and use_gpu else 'cpu'
 
@@ -60,7 +62,7 @@ def main(dir_file, image_folder, demo_path):
         image_path = os.path.join(image_folder, demo_path)
         image = Image.open(image_path).convert('RGB')
 
-    print('Data path:', image_path)
+    # print('Data path:', image_path)
 
     transf_list = []
     transf_list.append(transforms.Resize(256))
@@ -87,21 +89,51 @@ def main(dir_file, image_folder, demo_path):
 
         if valid['is_valid'] or show_anyways:
             if valid['reason'] == 'All ok.':
-                print ('RECIPE', num_valid)
+                # print ('RECIPE', num_valid)
 
-                BOLD = '\033[1m'
-                END = '\033[0m'
-                print (BOLD + '\nTitle:' + END,outs['title'])
+                # BOLD = '\033[1m'
+                # END = '\033[0m'
+                # print (BOLD + '\nTitle:' + END,outs['title'])
 
-                print (BOLD + '\nInstructions:'+END)
-                print ('-'+'\n-'.join(outs['recipe']))
-                print ('='*20)
+                # print (BOLD + '\nInstructions:'+END)
+                # print ('-'+'\n-'.join(outs['recipe']))
+                # print ('='*20)
 
                 #print ("Reason: ", valid['reason'])
                 break
-    search(dir_file, outs['recipe'])
+    recommend_id, recommend_lights = search(dir_file, outs['recipe'], lights)
+    recommend_title, recommend_url = get_recipe(dir_file,recommend_id)
+
+    # print('Recommendation of recipe:', recommend_id)
+    # print('Title:', recommend_title)
+    # print('Lights:', recommend_lights)
+    # print('url:', recommend_url)
+
+
+
+
+    return outs['title'], outs['recipe'], recommend_lights, recommend_title, recommend_url
+
+def get_recipe(dir_file,recommend_id):
+    with open(os.path.join(dir_file,'Recipe1M','recipes_with_nutritional_info.json'), 'r') as f:
+        data = json.load(f)
+
+    title = ''
+    url = ''
+
+    for i, item in enumerate(data):
+        if item['id'] == recommend_id:
+            found = True
+            title = item['title']
+            url = item['url']
+            break
     
-def search(dir_file, recipe):
+    return title, url
+
+
+
+    
+def search(dir_file, recipe, lights_txt):
     with open(os.path.join(dir_file,'nutritional_item.pkl'), 'rb') as f:
         data = pickle.load(f)
     
@@ -116,9 +148,9 @@ def search(dir_file, recipe):
         for base_word in base:
             if base_word in ingr:
                 part.append(base_word)
-    
+    lights_dic = eval(lights_txt)
     max_overlap = 0
-    min_light_num = 100
+    min_light_num = sum(lights_dic.values())
     min_light_txt = []
     recommend_list = 'None'
     recommend = ''
@@ -143,31 +175,27 @@ def search(dir_file, recipe):
                 min_light_num = num_light
                 min_light_txt = txt_light
 
-    # for img_id in recommend_list:
-    #     img_dir = os.path.join('/home/r8v10/git/InvCo/dataset/Recipe1M', partition, img_id)
-    #     if os.path.exists(img_dir):
-    #         max_overlap = overlap
-    #         min_light_num = num_light
-    #         min_light_txt = txt_light
-    #         recommend = img_id
-    #         print('Recommendation of image id:', recommend)
-    #         break
-
-
-    print('Recommendation of recipe:', recommend_list)
-    print('Lights:', min_light_txt)
-    print('Min light:', min_light_num)
+    return recommend_list, min_light_txt
 
 
 def encode(txt,lights):
     return sum(lights[x] for i, x in enumerate(txt))
 
-if __name__ == '__main__':
-    dir_file = '/home/r8v10/git/InvCo/dataset'
-    # Image directory path
-    image_folder = '/home/r8v10/git/InvCo/dataset/Recipe1M/train/0/0/0/0'
-    # Input image name
-    demo_path = input("Input image path: ")
-    
-    main(dir_file, image_folder, demo_path)
+class Demo():
+    def __init__(self):
+        self.dir_file = '/home/r8v10/git/InvCo/dataset'
+        self.image_folder = '/home/r8v10/git/InvCo/web/media/img'
 
+    def demo(self, demo_path, lights):
+        #dir_file = '/home/r8v10/git/InvCo/dataset'
+        # Image directory path
+        # image_folder = '/home/r8v10/git/InvCo/dataset/Recipe1M/train/0/0/0/0'
+        
+        # Input image name
+        # demo_path = input("Input image path: ")
+        # lights = input('Input light:')
+
+        title, recipe, recommend_lights, recommend_title, recommend_url = main(self.dir_file, self.image_folder, demo_path, lights)
+        output = {'title':title,'recipe':recipe,'recommend_lights':recommend_lights,'recommend_title':recommend_title,'recommend_url':recommend_url}
+        # print(title, recipe, recommend_lights, recommend_title, recommend_url)
+        return(output)
