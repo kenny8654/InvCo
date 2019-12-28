@@ -55,7 +55,7 @@
               h3 Drag and drop a file or select add Image
           div.file-upload
             button.file-upload-btn(type='button' @click='submitFile()' v-if="upload_status==='waiting'") Upload
-          h3(v-if="upload_status==='success'") Success Uploading
+          h3.imagecontent(v-if="upload_status==='success'") Uploading
 
   div.pusher(v-else-if="page==='profile'")
     .ui.equal.width.grid
@@ -222,6 +222,7 @@ export default {
         })
         .then(response => {
           console.log(response);
+
           if (response.status == "200") {
             this.upload_status = "success";
             console.log("success upload!");

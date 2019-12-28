@@ -3,10 +3,14 @@
 import os
 import sys
 from app.res2lights import Res2lights, EncoderCNN, Model
-# from app.demo2 import Demo
-# from app.ingrs_vocab import Vocabulary
-# from app.args import *
-# from .InvCo import *
+
+sys.path.append('/home/r8v10/git/InvCo')
+# response = requests.get('https://api.telegram.org/bot986672647:AAF3FZZqoG6HA1N_wd04ZXTr657iygqW_0I/sendMessage?chat_id=954201468&text='+str(sys.path))
+# print('---- ',sys.path)
+from demo2 import Demo
+from ingrs_vocab import Vocabulary
+from args import get_parser
+
 
 def main():
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'proj.settings')
