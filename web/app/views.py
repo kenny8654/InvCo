@@ -4,7 +4,7 @@ import sys
 sys.path.append('/home/r8v10/git/InvCo')
 from django.shortcuts import render
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse,JsonResponse
 from .models import *
 from .res2lights import Res2lights, EncoderCNN, Model
 from demo2 import Demo
@@ -22,8 +22,8 @@ def uploadImg(request):
         lights = r.get_lights(str(request.FILES['image']))
         d = Demo()
         output = d.demo(str(request.FILES['image']),str(lights))
-        final_output = {'output':output,'lights':lights}
-        return HttpResponse(str(final_output))
+        final_output = {"output":output,"lights":lights}
+        return JsonResponse(final_output)
 
     # return HttpResponse('ok')
 

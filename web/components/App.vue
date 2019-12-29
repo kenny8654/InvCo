@@ -55,7 +55,8 @@
               h3 Drag and drop a file or select add Image
           div.file-upload
             button.file-upload-btn(type='button' @click='submitFile()' v-if="upload_status==='waiting'") Upload
-          h3.imagecontent(v-if="upload_status==='success'") Uploading
+          h3.imagecontent(v-if="upload_status==='uploading'") Uploading
+          h3.h3.imagecontent(v-if="upload_status==='success'") Uploading
 
   div.pusher(v-else-if="page==='profile'")
     .ui.equal.width.grid
@@ -207,13 +208,14 @@ export default {
   },
   methods: {
     submitFile() {
+      this.upload_status = "uploading";
       let formData = new FormData();
       formData.append("image", this.file); //required
       console.log("form : ", formData.get("image"));
 
       axios
         .post("/upload", formData, {
-          headers: { "X-CSRFToken": this.getCookie("csrftoken") },
+          headers: { "X-CSRFToken": this.getCookie("csrftoken"),'Accept': 'application/json' },
           onUploadProgress: function(progressEvent) {
             this.uploadPercentage = parseInt(
               Math.round((progressEvent.loaded * 100) / progressEvent.total)
@@ -226,6 +228,17 @@ export default {
           if (response.status == "200") {
             this.upload_status = "success";
             console.log("success upload!");
+   
+            var imagecontent = "Title : " + response.data.output.title
+                      + "<br>Recipe : " + response.data.output.recipe 
+                      +"<br>fat : " + response.data.lights.fat 
+                      +"<br>salt : " + response.data.lights.salt
+                      +"<br>sugars : " + response.data.lights.sugars
+                      +"<br>saturates: " + response.data.lights.saturates
+                      + "<br>Recommended dishes : " + response.data.output.recommend_title 
+                      + "<br>Recommended dishes url : " + response.data.output.recommend_url
+
+            $(".imagecontent").html(imagecontent);
           }
         });
     },
@@ -331,7 +344,10 @@ h2
 
 h3
   color : #403833
-  text-align: center 
+  text-align: center
+
+.imagecontent
+  color: #FFF 
 
 .title
   padding: 20px 0 0 0
