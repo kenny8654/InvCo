@@ -359,7 +359,6 @@ export default {
     }
   },
   methods: {
-<<<<<<< HEAD
     submitFile() {
       let formData = new FormData();
       formData.append("image", this.file); //required
@@ -394,18 +393,6 @@ export default {
           $(".image-title").html(name);
         };
         reader.readAsDataURL(this.file);
-=======
-  readURL : function (event) {
-    if (event.target.files[0].name) {
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        $('.image-upload-wrap').hide();
-        $('.file-upload-image').attr('src', e.target.result);
-        $('.file-upload-content').show();
-        $('.image-title').html(event.target.files[0].name);
-      };
-      reader.readAsDataURL(event.target.files[0]);
->>>>>>> master
       } else {
         console.log("pic name is empty !");
         removeUpload();
@@ -430,7 +417,6 @@ export default {
       this.page = "home";
       axios.get("/getImages").then(response => {
 
-<<<<<<< HEAD
       var img_list = JSON.parse(response.data.replace(/'/g, '"'));
       var count = 0;
       var tmp_img_list = []
@@ -454,14 +440,6 @@ export default {
       var activity = this.activityInput;
       var height = this.heightInput;
       var weight = this.weightInput;
-=======
-    removeUpload : function () {
-      $('.file-upload-content').hide();
-      $('.image-upload-wrap').show();
-      $('.file-upload-input').show()
-      
-  }}}
->>>>>>> master
 
       if (gender == 'male')
         bmr = 88.362 + (13.397*weight) + (4.799*height) - (5.677*age);
@@ -484,6 +462,12 @@ export default {
       else calories = 0;
 
       this.calories = calories;
+    },
+    removeUpload : function () {
+      $('.file-upload-content').hide();
+      $('.image-upload-wrap').show();
+      $('.file-upload-input').show()
+      
     }
   }
 };
