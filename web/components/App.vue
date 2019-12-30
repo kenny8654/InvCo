@@ -33,7 +33,7 @@
             .ui.link.card
               .image
                 img(src='https://cdn.pixabay.com/photo/2015/04/10/00/41/food-715542_960_720.jpg')
-            .ui.link.card(v-for='im in imgList')
+            .ui.link.card(v-for='im in imgList' @click='click_img(im.url)')
               .image
                 img(v-bind:src="im.url")          
             .ui.link.card(@click ='show_upload')
@@ -56,8 +56,12 @@
           div.file-upload
             button.file-upload-btn(type='button' @click='submitFile()' v-if="upload_status==='waiting'") Upload
           h3.imagecontent(v-if="upload_status==='uploading'") Uploading
-          h3.h3.imagecontent(v-if="upload_status==='success'") Uploading
-
+          h3.imagecontent(v-if="upload_status==='success'") Uploading?
+  div.pusher(v-else-if="page==='receipe'")
+    h5 {{receipe_title}} 
+    <span v-html="receipe_content"></span>
+    //- div
+    //-   h3.receipe_imagecontent {{receipe_content}}
   div.pusher(v-else-if="page==='profile'")
     .ui.equal.width.grid
       .row
@@ -207,6 +211,54 @@ export default {
     }
   },
   methods: {
+    click_img(url) {
+      console.log("click!");
+      console.log(url);
+      let data = new FormData();
+      data.append("name", url);
+      axios
+        .post("/getSavedRecipe", data, {
+          headers: { Accept: "application/json" }
+        })
+        .then(response => {
+          console.log(response);
+          this.page = "receipe";
+          this.receipe_title = response.data.output.title + "";
+          var receipe_imagecontent =
+            "Title : " +
+            response.data.output.title +
+            "<br><img src='" +
+            url +
+            "' height='42' width='42'>" +
+            "<br>Recipe : " +
+            response.data.output.recipe +
+            "<br>fat : " +
+            response.data.lights.fat +
+            "<br>salt : " +
+            response.data.lights.salt +
+            "<br>sugars : " +
+            response.data.lights.sugars +
+            "<br>saturates: " +
+            response.data.lights.saturates +
+            "<br>Recommended dishes : " +
+            response.data.output.recommend_title +
+            "<br>Recommended dishes url : " +
+            response.data.output.recommend_url;
+
+          this.receipe_content = receipe_imagecontent;
+
+          // this.upload_status = "success";
+          // console.log("hey!");
+          // $(".image-upload-wrap").hide();
+          // $(".file-upload-image").attr("src", url);
+          // $(".file-upload-content").show();
+          // $(".image-title").html(url);
+          // console.log("hey!");
+          // var imagecontent = "123";
+          // console.log("imagecontent : " + imagecontent);
+          // $(".imagecontent").html(imagecontent);
+        });
+    },
     submitFile() {
       this.upload_status = "uploading";
       let formData = new FormData();
@@ -215,7 +267,10 @@ export default {
 
       axios
         .post("/upload", formData, {
-          headers: { "X-CSRFToken": this.getCookie("csrftoken"),'Accept': 'application/json' },
+          headers: {
+            "X-CSRFToken": this.getCookie("csrftoken"),
+            Accept: "application/json"
+          },
           onUploadProgress: function(progressEvent) {
             this.uploadPercentage = parseInt(
               Math.round((progressEvent.loaded * 100) / progressEvent.total)
@@ -228,15 +283,24 @@ export default {
           if (response.status == "200") {
             this.upload_status = "success";
             console.log("success upload!");
-   
-            var imagecontent = "Title : " + response.data.output.title
-                      + "<br>Recipe : " + response.data.output.recipe 
-                      +"<br>fat : " + response.data.lights.fat 
-                      +"<br>salt : " + response.data.lights.salt
-                      +"<br>sugars : " + response.data.lights.sugars
-                      +"<br>saturates: " + response.data.lights.saturates
-                      + "<br>Recommended dishes : " + response.data.output.recommend_title 
-                      + "<br>Recommended dishes url : " + response.data.output.recommend_url
+
+            var imagecontent =
+              "Title : " +
+              response.data.output.title +
+              "<br>Recipe : " +
+              response.data.output.recipe +
+              "<br>fat : " +
+              response.data.lights.fat +
+              "<br>salt : " +
+              response.data.lights.salt +
+              "<br>sugars : " +
+              response.data.lights.sugars +
+              "<br>saturates: " +
+              response.data.lights.saturates +
+              "<br>Recommended dishes : " +
+              response.data.output.recommend_title +
+              "<br>Recommended dishes url : " +
+              response.data.output.recommend_url;
 
             $(".imagecontent").html(imagecontent);
           }
