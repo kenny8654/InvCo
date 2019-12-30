@@ -55,8 +55,63 @@
               h3 Drag and drop a file or select add Image
           div.file-upload
             button.file-upload-btn(type='button' @click='submitFile()' v-if="upload_status==='waiting'") Upload
-          h3(v-if="upload_status==='success'") Success Uploading
-
+          //- h3(v-if="upload_status==='success'") Success Uploading
+          div.ui.two.column.centered.grid#foodDetail(v-if="upload_status==='success'")
+            div.column
+              h3 {{foodName}}
+            div.two.column.row.ui.equal.width.grid
+              div.column
+                h3 Ingredients
+                p#foodIngredient {{foodIngredient}}
+              div.column
+                h3 Lights
+                div.ui.equal.width.grid
+                  div.equal.width.row
+                    div.column
+                      p Fat
+                    div.column
+                      p Salt
+                    div.column
+                      p Saturates
+                    div.column
+                      p Sugars
+                  div.equal.width.row
+                    div.column
+                      i.circle.icon(v-bind:style="{color: fatColor}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: saltColor}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: saturatesColor}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: sugarsColor}")
+            div.column
+              h3 Other Similar Recipes for Recommendation
+            div.two.column.row.ui.equal.width.grid
+              div.column
+                h3 {{foodNameRecommendation}}
+                a#foodIngredient(v-bind:href="{foodUrlRecommendation}") {{foodUrlRecommendation}}
+              div.column
+                h3 Lights
+                div.ui.equal.width.grid
+                  div.equal.width.row
+                    div.column
+                      p Fat
+                    div.column
+                      p Salt
+                    div.column
+                      p Saturates
+                    div.column
+                      p Sugars
+                  div.equal.width.row
+                    div.column
+                      i.circle.icon(v-bind:style="{color: fatColorRecommendation}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: saltColorRecommendation}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: saturatesColorRecommendation}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: sugarsColorRecommendation}")
+              
   div.pusher(v-else-if="page==='profile'")
     .ui.equal.width.grid
       .row
@@ -149,6 +204,18 @@ export default {
       title: "Inverse Cooking",
       recipe: 100,
       numberOfImages: 0,
+      foodName: 'Peanut butter chocolate chip cookies',
+      foodIngredient: "2 cup peanut butter, 2 cup sugar, 1 cup brown sugar, 2 whole egg, 2 teaspoon vanilla, 1 all - purpose flour, 1/2 cup cocoa, 1/4 teaspoon salt, 1/4 teaspoon baking soda, 1 semi - sweet chocolate chip, 1 chocolate chip",
+      fatInput: "orange",
+      saltInput: "green",
+      saturatesInput: "orange",
+      sugarsInput: "green",
+      foodNameRecommendation: 'Zucchini Bread - Bread Machine',
+      foodUrlRecommendation: 'http://www.food.com/recipe/zucchini-bread-bread-machine-409757',
+      fatInputRecommendation: 'green',
+      saltInputRecommendation: 'green',
+      saturatesInputRecommendation: 'green',
+      sugarsInputRecommendation: 'green',
       page: "home",
       file: "",
       uploadPercentage: 0,
@@ -164,6 +231,86 @@ export default {
     };
   },
   computed: {
+    fatColor() {
+      var color = this.fatInput;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    saltColor() {
+      var color = this.saltInput;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    saturatesColor() {
+      var color = this.saturatesInput;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    sugarsColor() {
+      var color = this.sugarsInput;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    fatColorRecommendation() {
+      var color = this.fatInputRecommendation;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    saltColorRecommendation() {
+      var color = this.saltInputRecommendation;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    saturatesColorRecommendation() {
+      var color = this.saturatesInputRecommendation;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    sugarsColorRecommendation() {
+      var color = this.sugarsInputRecommendation;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
     bmi() {
       var weight = this.weightInput;
       var height = this.heightInput;
@@ -427,6 +574,11 @@ body
   font-size: 40px
   padding: 0 15px 15px 15px
 
+.image-title
+  color: #403833
+  font-family: 'Raleway', sans-serif
+  font-size: 25px
+
 .drag-text
   text-align: center
 
@@ -442,17 +594,34 @@ body
   max-width: 200px
   padding: 20px
 
-.row
-  padding-top: 0
+#foodDetail
+  background: rgba(242, 242, 239, 0.8)
+  margin: 0 auto
+  width: 80vw
 
-#healthInfo
-  margin-left: 20px
-  margin-top: 10px
+#foodDetail column
+  padding: 0
+  text-align: center
 
-#healthInfo .card
-  background: #F2F2EF
-  border: 1px solid rgba(64, 56, 51, 0.2)
-  height: 100px
+#foodDetail h3
+  color: #13A3A5
+  font-family: 'Raleway', sans-serif
+  font-size: 25px
+
+#foodDetail p, #foodDetail a
+  color: #403833
+  font-family: 'Raleway', sans-serif
+  font-size: 20px
+  text-align: center
+
+#foodDetail #foodIngredient
+  text-align: left
+
+#foodDetail i.circle.icon
+  display: block
+  font-size: 25px
+  margin: 0 auto
+  width: 100%
 
 #healthInfo .card .header
   color: #E54E45
