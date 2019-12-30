@@ -71,15 +71,15 @@ for e in range(epochs):
         fats = torch.FloatTensor(fats)
         torch_dataset = Data.TensorDataset(features,fats)
         loader = Data.DataLoader(
-            dataset=torch_dataset,      # torch TensorDataset format
-            batch_size=BATCH_SIZE,      # mini batch size
-            shuffle=True,              # 要不要打乱数据 (打乱比较好)
-            num_workers=0,              # 多线程来读数据
+            dataset=torch_dataset,     
+            batch_size=BATCH_SIZE,      
+            shuffle=True,              
+            num_workers=0,              
             drop_last=False
         )
 
         for feature, labels in tqdm(loader):
-            optimizer.zero_grad()  # 避免上一個batch的gradient累積
+            optimizer.zero_grad()  
             feature = feature.to(device)
             labels = labels.to(device=device, dtype=torch.int64)
             output = model(feature)

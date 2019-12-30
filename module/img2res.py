@@ -11,7 +11,6 @@ import urllib
 from PIL import Image
 from torchvision import transforms
 import matplotlib.pyplot as plt
-from torchvision import transforms
 from encoder import EncoderCNN
 import torch.nn as nn     
 

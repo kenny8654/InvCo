@@ -32,12 +32,6 @@ class Model(nn.Module):
         x = F.softmax(self.fc2(x), dim=1)
         return x
 
-def res_generator(items,batch_size=32):
-    while True:
-        for item in range(0,len(items),batch_size):
-            yield item
-
-
 torch.cuda.empty_cache()
 device_id = 0
 device = 'cuda:' + str(device_id)
