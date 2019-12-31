@@ -1,7 +1,7 @@
 import os
 import sys
-
-sys.path.append('/home/r8v10/git/InvCo')
+from invco import ROOT_DIR
+sys.path.append(ROOT_DIR)
 from django.shortcuts import render
 from django.conf import settings
 from django.http import HttpResponse
