@@ -27,13 +27,13 @@
       .row 
         .thirteen.wide.column
           .ui.seven.stackable.cards
-            .ui.link.card
-              .image
-                img(src='https://cdn.pixabay.com/photo/2017/09/30/15/10/pizza-2802332_960_720.jpg')
-            .ui.link.card
-              .image
-                img(src='https://cdn.pixabay.com/photo/2015/04/10/00/41/food-715542_960_720.jpg')
-            .ui.link.card(v-for='im in imgList')
+            //- .ui.link.card
+            //-   .image
+            //-     img(src='https://cdn.pixabay.com/photo/2017/09/30/15/10/pizza-2802332_960_720.jpg')
+            //- .ui.link.card
+            //-   .image
+            //-     img(src='https://cdn.pixabay.com/photo/2015/04/10/00/41/food-715542_960_720.jpg')
+            .ui.link.card(v-for='im in imgList' @click='click_img(im.url)')
               .image
                 img(v-bind:src="im.url")          
             .ui.link.card(@click ='show_upload')
@@ -47,15 +47,79 @@
         div.file-upload-content
           img.file-upload-image(src="#")
           div.image-title-wrap
-            span.image-title Uploaded Image
+            span.image-title {{imagetitle}}
+
         form(action='' method='post' enctype="multipart/form-data")
-          div.image-upload-wrap
+          div.image-upload-wrap(v-if="upload_status==='waiting'")
             input.file-upload-input(type='file' ref='file' @change='handleFileUpload()' accept='image/*' name='img')
             div.drag-text 
               h3 Drag and drop a file or select add Image
           div.file-upload
             button.file-upload-btn(type='button' @click='submitFile()' v-if="upload_status==='waiting'") Upload
-          h3.imagecontent(v-if="upload_status==='success'") Uploading
+
+          //- h3(v-if="upload_status==='success'") Success Uploading
+          div.ui.two.column.centered.grid#foodDetail(v-if="upload_status==='success'")
+            div.column
+              h3 {{foodName}}
+            div.two.column.row.ui.equal.width.grid
+              div.column
+                h3 Ingredients
+                p#foodIngredient {{foodIngredient}}
+              div.column
+                h3 Lights
+                div.ui.equal.width.grid
+                  div.equal.width.row
+                    div.column
+                      p Fat
+                    div.column
+                      p Salt
+                    div.column
+                      p Saturates
+                    div.column
+                      p Sugars
+                  div.equal.width.row
+                    div.column
+                      i.circle.icon(v-bind:style="{color: fatColor}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: saltColor}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: saturatesColor}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: sugarsColor}")
+            div.column
+              h3 Other Similar Recipes for Recommendation
+            div.two.column.row.ui.equal.width.grid
+              div.column
+                h3 {{foodNameRecommendation}}
+                a#foodIngredient(v-bind:href="{foodUrlRecommendation}") {{foodUrlRecommendation}}
+              div.column
+                h3 Lights
+                div.ui.equal.width.grid
+                  div.equal.width.row
+                    div.column
+                      p Fat
+                    div.column
+                      p Salt
+                    div.column
+                      p Saturates
+                    div.column
+                      p Sugars
+                  div.equal.width.row
+                    div.column
+                      i.circle.icon(v-bind:style="{color: fatColorRecommendation}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: saltColorRecommendation}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: saturatesColorRecommendation}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: sugarsColorRecommendation}")
+              
+
+  //-         h3.imagecontent(v-if="upload_status==='uploading'") Uploading
+  //-         h3.imagecontent(v-if="upload_status==='success'") Uploading?
+  //- div.pusher(v-else-if="page==='receipe'")
+  //-   h5 {{receipe_title}} 
+  //-   <span v-html="receipe_content"></span>
 
   div.pusher(v-else-if="page==='profile'")
     .ui.equal.width.grid
@@ -148,6 +212,18 @@ export default {
       title: "Inverse Cooking",
       recipe: 100,
       numberOfImages: 0,
+      foodName: 'Peanut butter chocolate chip cookies',
+      foodIngredient: "2 cup peanut butter, 2 cup sugar, 1 cup brown sugar, 2 whole egg, 2 teaspoon vanilla, 1 all - purpose flour, 1/2 cup cocoa, 1/4 teaspoon salt, 1/4 teaspoon baking soda, 1 semi - sweet chocolate chip, 1 chocolate chip",
+      fatInput: "orange",
+      saltInput: "green",
+      saturatesInput: "orange",
+      sugarsInput: "green",
+      foodNameRecommendation: 'Zucchini Bread - Bread Machine',
+      foodUrlRecommendation: 'http://www.food.com/recipe/zucchini-bread-bread-machine-409757',
+      fatInputRecommendation: 'green',
+      saltInputRecommendation: 'green',
+      saturatesInputRecommendation: 'green',
+      sugarsInputRecommendation: 'green',
       page: "home",
       file: "",
       uploadPercentage: 0,
@@ -159,10 +235,91 @@ export default {
       heightInput: "",
       weightInput: "",
       calories: "",
-      output: 0
+      output: 0,
+      imagetitle : ""
     };
   },
   computed: {
+    fatColor() {
+      var color = this.fatInput;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    saltColor() {
+      var color = this.saltInput;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    saturatesColor() {
+      var color = this.saturatesInput;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    sugarsColor() {
+      var color = this.sugarsInput;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    fatColorRecommendation() {
+      var color = this.fatInputRecommendation;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    saltColorRecommendation() {
+      var color = this.saltInputRecommendation;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    saturatesColorRecommendation() {
+      var color = this.saturatesInputRecommendation;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    sugarsColorRecommendation() {
+      var color = this.sugarsInputRecommendation;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
     bmi() {
       var weight = this.weightInput;
       var height = this.heightInput;
@@ -206,14 +363,52 @@ export default {
     }
   },
   methods: {
+
+    click_img(url) {
+      console.log("click!");
+      console.log(url);
+      let data = new FormData();
+      data.append("name", url);
+      axios
+        .post("/getSavedRecipe", data, {
+          headers: { Accept: "application/json" }
+        })
+        .then(response => {
+          console.log(response);
+          this.page = "upload";
+          $(".file-upload-image").attr("src", url);
+          $(".file-upload-content").show()
+          var light_dict = {0:"green",1:"orange",2:"red"}
+          this.upload_status = "success";
+          console.log("success upload!");
+          this.foodName = response.data.output.title;
+          this.foodIngredient = response.data.output.recipe;
+          this.foodNameRecommendation = response.data.output.recommend_title;
+          this.foodUrlRecommendation = response.data.output.recommend_url;
+          this.fatInput = light_dict[response.data.lights.fat]
+          this.saltInput = light_dict[response.data.lights.salt]
+          this.saturatesInput = light_dict[response.data.lights.saturates]
+          this.sugarsInput = light_dict[response.data.lights.sugars]
+          this.fatInputRecommendation = response.data.output.recommend_lights[0]
+          this.saltInputRecommendation = response.data.output.recommend_lights[1]
+          this.saturatesInputRecommendation = response.data.output.recommend_lights[2]
+          this.sugarsInputRecommendation = response.data.output.recommend_lights[3]
+          this.imagetitle = url
+        });
+    },
+
     submitFile() {
+      this.upload_status = "uploading";
       let formData = new FormData();
       formData.append("image", this.file); //required
       console.log("form : ", formData.get("image"));
 
       axios
         .post("/upload", formData, {
-          headers: { "X-CSRFToken": this.getCookie("csrftoken") },
+          headers: {
+            "X-CSRFToken": this.getCookie("csrftoken"),
+            Accept: "application/json"
+          },
           onUploadProgress: function(progressEvent) {
             this.uploadPercentage = parseInt(
               Math.round((progressEvent.loaded * 100) / progressEvent.total)
@@ -224,8 +419,22 @@ export default {
           console.log(response);
 
           if (response.status == "200") {
+            var light_dict = {0:"green",1:"orange",2:"red"}
             this.upload_status = "success";
             console.log("success upload!");
+            $(".image-upload-wrap").hide();
+            this.foodName = response.data.output.title;
+            this.foodIngredient = response.data.output.recipe;
+            this.foodNameRecommendation = response.data.output.recommend_title;
+            this.foodUrlRecommendation = response.data.output.recommend_url;
+            this.fatInput = light_dict[response.data.lights.fat]
+            this.saltInput = light_dict[response.data.lights.salt]
+            this.saturatesInput = light_dict[response.data.lights.saturates]
+            this.sugarsInput = light_dict[response.data.lights.sugars]
+            this.fatInputRecommendation = response.data.output.recommend_lights[0]
+            this.saltInputRecommendation = response.data.output.recommend_lights[1]
+            this.saturatesInputRecommendation = response.data.output.recommend_lights[2]
+            this.sugarsInputRecommendation = response.data.output.recommend_lights[3]
           }
         });
     },
@@ -235,6 +444,7 @@ export default {
       if (this.file) {
         var reader = new FileReader();
         reader.onload = function(e) {
+          // this.imagetitle = name
           $(".image-upload-wrap").hide();
           $(".file-upload-image").attr("src", e.target.result);
           $(".file-upload-content").show();
@@ -264,6 +474,7 @@ export default {
     show_home() {
       this.page = "home";
       axios.get("/getImages").then(response => {
+
         var img_list = JSON.parse(response.data.replace(/'/g, '"'));
         var count = 0;
         var tmp_img_list = [];
@@ -276,6 +487,7 @@ export default {
         this.numberOfImages = count;
         this.upload_status = "waiting";
       });
+
     },
     show_profile() {
       this.page = "profile";
@@ -289,10 +501,11 @@ export default {
       var height = this.heightInput;
       var weight = this.weightInput;
 
-      if (gender == "male")
-        bmr = 88.362 + 13.397 * weight + 4.799 * height - 5.677 * age;
-      else if (gender == "female")
-        bmr = 447.593 + 9.247 * weight + 3.098 * height - 4.33 * age;
+      if (gender == 'male')
+        bmr = 88.362 + (13.397*weight) + (4.799*height) - (5.677*age);
+      else if (gender == 'female')
+        bmr = 447.593 + (9.247*weight) + (3.098*height) - (4.330*age);
+
       else bmr = 0;
 
       if (activity == "bmr") calories = bmr;
@@ -304,6 +517,12 @@ export default {
       else calories = 0;
 
       this.calories = calories;
+    },
+    removeUpload : function () {
+      $('.file-upload-content').hide();
+      $('.image-upload-wrap').show();
+      $('.file-upload-input').show()
+      
     }
   }
 };
@@ -331,7 +550,10 @@ h2
 
 h3
   color : #403833
-  text-align: center 
+  text-align: center
+
+.imagecontent
+  color: #FFF 
 
 .title
   padding: 20px 0 0 0
@@ -416,6 +638,11 @@ body
   font-size: 40px
   padding: 0 15px 15px 15px
 
+.image-title
+  color: #403833
+  font-family: 'Raleway', sans-serif
+  font-size: 25px
+
 .drag-text
   text-align: center
 
@@ -431,17 +658,34 @@ body
   max-width: 200px
   padding: 20px
 
-.row
-  padding-top: 0
+#foodDetail
+  background: rgba(242, 242, 239, 0.8)
+  margin: 0 auto
+  width: 80vw
 
-#healthInfo
-  margin-left: 20px
-  margin-top: 10px
+#foodDetail column
+  padding: 0
+  text-align: center
 
-#healthInfo .card
-  background: #F2F2EF
-  border: 1px solid rgba(64, 56, 51, 0.2)
-  height: 100px
+#foodDetail h3
+  color: #13A3A5
+  font-family: 'Raleway', sans-serif
+  font-size: 25px
+
+#foodDetail p, #foodDetail a
+  color: #403833
+  font-family: 'Raleway', sans-serif
+  font-size: 20px
+  text-align: center
+
+#foodDetail #foodIngredient
+  text-align: left
+
+#foodDetail i.circle.icon
+  display: block
+  font-size: 25px
+  margin: 0 auto
+  width: 100%
 
 #healthInfo .card .header
   color: #E54E45

@@ -155,7 +155,7 @@ def search(dir_file, recipe, lights_txt):
     min_light_txt = []
     recommend_list = 'None'
     recommend = ''
-    lights = {'green':1, 'orange':2, 'red':3}
+    lights = {'green':0, 'orange':1, 'red':2}
 
     for i, item in enumerate(data):
         overlap = 0
@@ -197,6 +197,6 @@ class Demo():
         # lights = input('Input light:')
 
         title, recipe, recommend_lights, recommend_title, recommend_url = main(self.dir_file, self.image_folder, demo_path, lights)
-        output = {'title':title,'recipe':recipe,'recommend_lights':recommend_lights,'recommend_title':recommend_title,'recommend_url':recommend_url}
+        output = {"title":title,"recipe":recipe,"recommend_lights":recommend_lights,"recommend_title":recommend_title,"recommend_url":recommend_url}
         # print(title, recipe, recommend_lights, recommend_title, recommend_url)
         return(output)

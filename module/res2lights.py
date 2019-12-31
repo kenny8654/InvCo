@@ -106,7 +106,7 @@ class Res2lights():
             _, pred_salt = torch.max(pred_salt, 1)
             _, pred_sugars = torch.max(pred_sugars, 1)
             _, pred_saturates = torch.max(pred_saturates, 1)
-            dict_ = {'fat':pred_fat.item(), 'salt':pred_salt.item(), 'sugars':pred_sugars.item(), 'saturates':pred_saturates.item()}
+            dict_ = {"fat":pred_fat.item(), "salt":pred_salt.item(), "sugars":pred_sugars.item(), "saturates":pred_saturates.item()}
             # print(dict_)
             return dict_
         # return dict_

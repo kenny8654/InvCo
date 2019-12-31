@@ -27,4 +27,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('upload', views.uploadImg),
     path('getImages', views.getImages),
+    path('getSavedRecipe',views.getSavedRecipe),
 ] +  static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
