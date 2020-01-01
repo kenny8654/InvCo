@@ -49,6 +49,9 @@
           div.image-title-wrap
             span.image-title {{imagetitle}}
 
+        div(v-if="show_image==='history'" style="  text-align: center")
+          img.file-upload-image(:src='image_url')
+
         form(action='' method='post' enctype="multipart/form-data")
           div.image-upload-wrap(v-if="upload_status==='waiting'")
             input.file-upload-input(type='file' ref='file' @change='handleFileUpload()' accept='image/*' name='img')
@@ -376,8 +379,11 @@ export default {
         .then(response => {
           console.log(response);
           this.page = "upload";
-          $(".file-upload-image").attr("src", url);
-          $(".file-upload-content").show()
+          this.show_image = 'history'
+          this.image_url = url
+
+          // $(".file-upload-image").attr("src",url);
+          // $(".file-upload-content").show()
           var light_dict = {0:"green",1:"orange",2:"red"}
           this.upload_status = "success";
           console.log("success upload!");
@@ -440,6 +446,7 @@ export default {
     },
     handleFileUpload(event) {
       this.file = this.$refs.file.files[0];
+      console.log(this.file.name)
       var name = this.file.name;
       if (this.file) {
         var reader = new FileReader();
@@ -470,9 +477,11 @@ export default {
     },
     show_upload() {
       this.page = "upload";
+      this.show_image = 'upload';
     },
     show_home() {
       this.page = "home";
+      this.show_image = 'home';
       axios.get("/getImages").then(response => {
 
         var img_list = JSON.parse(response.data.replace(/'/g, '"'));

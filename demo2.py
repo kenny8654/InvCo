@@ -34,7 +34,7 @@ def main(dir_file, image_folder, demo_path, lights):
     model = get_model(args, ingr_vocab_size)
 
     # Load the trained model parameters
-    model_dir = '/home/r8v10/git/InvCo/dataset/model/inversecooking/model/checkpoints'
+    model_dir = '/home/r8v10/git/InvCo/dataset/new_model/inversecooking/model/checkpoints'
     model_path = os.path.join(model_dir, 'modelbest.ckpt')
     model.load_state_dict(torch.load(model_path, map_location=map_loc))
     model.to(device)
