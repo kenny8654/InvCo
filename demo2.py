@@ -16,6 +16,7 @@ import requests
 from io import BytesIO
 import random
 from collections import Counter
+from invco import ROOT_DIR
 
 def main(dir_file, image_folder, demo_path, lights):
     use_gpu = True
@@ -35,6 +36,7 @@ def main(dir_file, image_folder, demo_path, lights):
 
     # Load the trained model parameters
     model_dir = '/home/r8v10/git/InvCo/dataset/new_model/inversecooking/model/checkpoints'
+#     model_dir = F'{ROOT_DIR}/dataset/model/inversecooking/model/checkpoints'
     model_path = os.path.join(model_dir, 'modelbest.ckpt')
     model.load_state_dict(torch.load(model_path, map_location=map_loc))
     model.to(device)
@@ -183,8 +185,8 @@ def encode(txt,lights):
 
 class Demo():
     def __init__(self):
-        self.dir_file = '/home/r8v10/git/InvCo/dataset'
-        self.image_folder = '/home/r8v10/git/InvCo/web/media/img'
+        self.dir_file = F'{ROOT_DIR}/dataset'
+        self.image_folder = F'{ROOT_DIR}/web/media/img'
 
     def demo(self, demo_path, lights):
         #dir_file = '/home/r8v10/git/InvCo/dataset'
