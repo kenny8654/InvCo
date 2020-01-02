@@ -10,8 +10,8 @@
       h1#title_text {{ title }}
     .ui.item(@click='show_home') Home
     .ui.item(@click='show_profile') Profile
-    .ui.item Dashboard
-    .ui.item Statistic
+    .ui.item(@click='show_developer') Developer
+    .ui.item(@click='show_admin') Admin
   .ui.internally.celled.grid.pusher
     .row
       .four.wide.column
@@ -19,24 +19,62 @@
       .four.wide.column
         h2 Number of image: {{numberOfImages}}
       .four.wide.column
-        h2 Empty
+        h2 NCKUEE  BIG  DATA
     .row
   
   div.pusher(v-if="page==='home'")
     .ui.internally.celled.grid
       .row 
         .thirteen.wide.column
+          .ui.four.stackable.cards
+            
+            .ui.link.card(v-if="card==='user'")
+              .image
+                img(style='max-height: 192px' src='https://i.imgur.com/BQjt8FC.jpg')
+              .content
+                .header Ivan
+                .meta 資料前處理、transformer模型建立、推薦料理
+            .ui.link.card(v-if="card==='user'")
+              .image
+                img(style='max-height: 192px' src='https://i.imgur.com/yIONwmQ.jpg')
+              .content
+                .header Han
+                .meta 網頁前後端+ 營養成分Model Training 與計算
+            .ui.link.card(v-if="card==='user'")
+              .image
+                img(style='max-height: 192px' src='https://i.imgur.com/MruEeRE.jpg')
+              .content
+                .header Kenny
+                .meta 網頁前後端+ 營養成分Model Training 與計算
+            .ui.link.card(v-if="card==='user'")
+              .image
+                img(style='max-height: 192px' src='https://i.imgur.com/JfOHRwl.jpg')
+              .content
+                .header Timmy
+                .meta 資料前處理 + transformer模型建立
+            .ui.link.card(v-if="card==='user'")
+              .image
+                img(style='max-height: 192px' src='https://i.imgur.com/JpvJIeO.jpg')
+              .content
+                .header Sunny
+                .meta 網頁前後端，協助專案規劃
+            .ui.link.card(v-if="card==='user'")
+              .image
+                img(style='max-height: 192px' src='https://i.imgur.com/tFvYTfz.jpg')
+              .content
+                .header Alan
+                .meta 網頁前後端 + 專案規劃
+            .ui.link.card(v-if="card==='user'")
+              .image
+                img(style='max-height: 192px' src='https://i.imgur.com/7oUImmi.jpg')
+              .content
+                .header Vivi
+                .meta 網頁前端與設計
           .ui.seven.stackable.cards
-            //- .ui.link.card
-            //-   .image
-            //-     img(src='https://cdn.pixabay.com/photo/2017/09/30/15/10/pizza-2802332_960_720.jpg')
-            //- .ui.link.card
-            //-   .image
-            //-     img(src='https://cdn.pixabay.com/photo/2015/04/10/00/41/food-715542_960_720.jpg')
-            .ui.link.card(v-for='im in imgList' @click='click_img(im.url)')
+            .ui.link.card(v-for='im in imgList' @click='click_img(im.url)' v-if="card==='notuser'")
               .image
                 img(v-bind:src="im.url")          
-            .ui.link.card(@click ='show_upload')
+            .ui.link.card(v-if="card==='notuser'" @click ='show_upload')
               .image
                 img(src="https://i.imgur.com/GWvodHn.png")
             
@@ -213,7 +251,7 @@ export default {
   data() {
     return {
       title: "Inverse Cooking",
-      recipe: 100,
+      recipe: 639824,
       numberOfImages: 0,
       foodName: 'Peanut butter chocolate chip cookies',
       foodIngredient: "2 cup peanut butter, 2 cup sugar, 1 cup brown sugar, 2 whole egg, 2 teaspoon vanilla, 1 all - purpose flour, 1/2 cup cocoa, 1/4 teaspoon salt, 1/4 teaspoon baking soda, 1 semi - sweet chocolate chip, 1 chocolate chip",
@@ -228,6 +266,7 @@ export default {
       saturatesInputRecommendation: 'green',
       sugarsInputRecommendation: 'green',
       page: "home",
+      card: "notuser",
       file: "",
       uploadPercentage: 0,
       imgList: "",
@@ -406,6 +445,9 @@ export default {
     submitFile() {
       this.upload_status = "uploading";
       let formData = new FormData();
+      // var f = Object.freeze(this.file)
+      // f.name = f.name.replace(/_/g,'')
+      // this.file.name = this.file.name.replace(/_/g,'')
       formData.append("image", this.file); //required
       console.log("form : ", formData.get("image"));
 
@@ -446,8 +488,9 @@ export default {
     },
     handleFileUpload(event) {
       this.file = this.$refs.file.files[0];
+      // this.file.name = this.file.name.replace(/_/g,'')
       console.log(this.file.name)
-      var name = this.file.name;
+      var name = this.file.name
       if (this.file) {
         var reader = new FileReader();
         reader.onload = function(e) {
@@ -480,6 +523,7 @@ export default {
       this.show_image = 'upload';
     },
     show_home() {
+      this.card = "notuser"
       this.page = "home";
       this.show_image = 'home';
       axios.get("/getImages").then(response => {
@@ -498,8 +542,15 @@ export default {
       });
 
     },
+    show_admin(){
+      window.location = 'http://merry.ee.ncku.edu.tw:10122/admin';
+    },
     show_profile() {
       this.page = "profile";
+    },
+    show_developer(){
+      this.card = "user";
+      this.page = "home"
     },
     calculate_calories() {
       var calories = 0,

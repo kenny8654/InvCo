@@ -1,5 +1,6 @@
 import os
 import sys
+import requests
 from invco import ROOT_DIR
 sys.path.append(ROOT_DIR)
 from django.shortcuts import render
@@ -12,13 +13,14 @@ from demo2 import Demo
 from ingrs_vocab import Vocabulary
 from args import get_parser
 
-import requests
-
 def index(request):
     return render(request, 'index.html')
 
 def uploadImg(request):
     if request.method == 'POST':
+        path = settings.MEDIA_ROOT
+        img_list = os.listdir(path + '/img')
+        request.FILES['image'].name = str(len(img_list))
         img = ImgSave(img_url=request.FILES['image'])
         img.save()
 

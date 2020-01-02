@@ -158,6 +158,9 @@ def search(dir_file, recipe, lights_txt):
     recommend = ''
     lights = {'green':0, 'orange':1, 'red':2}
 
+    re_list = []
+    re_light_list = []
+
     for i, item in enumerate(data):
         overlap = 0
         for ingr in item['ingredients']:
@@ -171,11 +174,18 @@ def search(dir_file, recipe, lights_txt):
             num_light = encode(txt_light, lights)
 
             if num_light < min_light_num:
-                recommend_list = item['id']
-                partition = item['partition']
+                #recommend_list = item['id']
+                #partition = item['partition']
                 max_overlap = overlap
-                min_light_num = num_light
-                min_light_txt = txt_light
+                #min_light_num = num_light
+                #min_light_txt = txt_light
+                re_list.append(item['id'])
+                re_light_list.append(txt_light)
+
+    candi = random.randint(0,len(re_list)-1)
+    recommend_list = re_list[candi]
+    min_light_txt = re_light_list[candi]
+
 
     return recommend_list, min_light_txt
 
