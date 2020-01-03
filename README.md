@@ -17,6 +17,8 @@
 - [slide (proposal)](https://reurl.cc/4gjRRX)
 
 ## Application
-https://i.imgur.com/CNQUF2Z.jpg
-https://i.imgur.com/VFYE5rT.jpg
-https://i.imgur.com/ggXtB3x.jpg
+![](https://i.imgur.com/CNQUF2Z.jpg)
+
+![](https://i.imgur.com/VFYE5rT.jpg)
+
+![](https://i.imgur.com/ggXtB3x.jpg)
