@@ -1,97 +1,669 @@
-<template lang='pug'>
+<template lang='pug'> 
 #app
-  h1 hello {{ title }}
-  div.file-upload
-    button.file-upload-btn(type='button' @click='addImage') Add Image
-  div.image-upload-wrap
-    input.file-upload-input(type='file'  @change="readURL"  accept="image/*")
-    div.drag-text 
-      h3 Drag and drop a file or select add Image
-  div.file-upload-content
-    img.file-upload-image(src="#")
-    div.image-title-wrap
-      button.remove-image(type='button' @click="removeUpload") Remove
-        span.image-title Uploaded Image
+  link(href="https://fonts.googleapis.com/css?family=Kalam&display=swap" rel="stylesheet")
+  link(href="https://fonts.googleapis.com/css?family=Dosis&display=swap" rel="stylesheet")
+  link(href="https://fonts.googleapis.com/css?family=Raleway&display=swap", rel="stylesheet")
+
+  .ui.visible.sidebar.left.inverted.vertical.menu
+    div.title
+      img.ui.tiny.circular.centered.image#title(src='https://i.imgur.com/EIi4jhh.png')
+      h1#title_text {{ title }}
+    .ui.item(@click='show_home') Home
+    .ui.item(@click='show_profile') Profile
+    .ui.item(@click='show_developer') Developer
+    .ui.item(@click='show_admin') Admin
+  .ui.internally.celled.grid.pusher
+    .row
+      .four.wide.column
+        h2 Number of recipes: {{recipe}}
+      .four.wide.column
+        h2 Number of image: {{numberOfImages}}
+      .four.wide.column
+        h2 NCKUEE  BIG  DATA
+    .row
+  
+  div.pusher(v-if="page==='home'")
+    .ui.internally.celled.grid
+      .row 
+        .thirteen.wide.column
+          .ui.four.stackable.cards
+            
+            .ui.link.card(v-if="card==='user'")
+              .image
+                img(style='max-height: 192px' src='https://i.imgur.com/BQjt8FC.jpg')
+              .content
+                .header Ivan
+                .meta 資料前處理、transformer模型建立、推薦料理
+            .ui.link.card(v-if="card==='user'")
+              .image
+                img(style='max-height: 192px' src='https://i.imgur.com/yIONwmQ.jpg')
+              .content
+                .header Han
+                .meta 網頁前後端+ 營養成分Model Training 與計算
+            .ui.link.card(v-if="card==='user'")
+              .image
+                img(style='max-height: 192px' src='https://i.imgur.com/MruEeRE.jpg')
+              .content
+                .header Kenny
+                .meta 網頁前後端+ 營養成分Model Training 與計算
+            .ui.link.card(v-if="card==='user'")
+              .image
+                img(style='max-height: 192px' src='https://i.imgur.com/JfOHRwl.jpg')
+              .content
+                .header Timmy
+                .meta 資料前處理 + transformer模型建立
+            .ui.link.card(v-if="card==='user'")
+              .image
+                img(style='max-height: 192px' src='https://i.imgur.com/JpvJIeO.jpg')
+              .content
+                .header Sunny
+                .meta 網頁前後端，協助專案規劃
+            .ui.link.card(v-if="card==='user'")
+              .image
+                img(style='max-height: 192px' src='https://i.imgur.com/tFvYTfz.jpg')
+              .content
+                .header Alan
+                .meta 網頁前後端 + 專案規劃
+            .ui.link.card(v-if="card==='user'")
+              .image
+                img(style='max-height: 192px' src='https://i.imgur.com/7oUImmi.jpg')
+              .content
+                .header Vivi
+                .meta 網頁前端與設計
+          .ui.seven.stackable.cards
+            .ui.link.card(v-for='im in imgList' @click='click_img(im.url)' v-if="card==='notuser'")
+              .image
+                img(v-bind:src="im.url")          
+            .ui.link.card(v-if="card==='notuser'" @click ='show_upload')
+              .image
+                img(src="https://i.imgur.com/GWvodHn.png")
+            
+  div.pusher(v-else-if="page==='upload'")
+    .ui.internally.celled.grid
+      .four.wide.column
+      div
+        div.file-upload-content
+          img.file-upload-image(src="#")
+          div.image-title-wrap
+            span.image-title {{imagetitle}}
+
+        div(v-if="show_image==='history'" style="  text-align: center")
+          img.file-upload-image(:src='image_url')
+
+        form(action='' method='post' enctype="multipart/form-data")
+          div.image-upload-wrap(v-if="upload_status==='waiting'")
+            input.file-upload-input(type='file' ref='file' @change='handleFileUpload()' accept='image/*' name='img')
+            div.drag-text 
+              h3 Drag and drop a file or select add Image
+          div.file-upload
+            button.file-upload-btn(type='button' @click='submitFile()' v-if="upload_status==='waiting'") Upload
+
+          //- h3(v-if="upload_status==='success'") Success Uploading
+          div.ui.two.column.centered.grid#foodDetail(v-if="upload_status==='success'")
+            div.column
+              h3 {{foodName}}
+            div.two.column.row.ui.equal.width.grid
+              div.column
+                h3 Ingredients
+                p#foodIngredient {{foodIngredient}}
+              div.column
+                h3 Lights
+                div.ui.equal.width.grid
+                  div.equal.width.row
+                    div.column
+                      p Fat
+                    div.column
+                      p Salt
+                    div.column
+                      p Saturates
+                    div.column
+                      p Sugars
+                  div.equal.width.row
+                    div.column
+                      i.circle.icon(v-bind:style="{color: fatColor}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: saltColor}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: saturatesColor}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: sugarsColor}")
+            div.column
+              h3 Other Similar Recipes for Recommendation
+            div.two.column.row.ui.equal.width.grid
+              div.column
+                h3 {{foodNameRecommendation}}
+                a#foodIngredient(v-bind:href="{foodUrlRecommendation}") {{foodUrlRecommendation}}
+              div.column
+                h3 Lights
+                div.ui.equal.width.grid
+                  div.equal.width.row
+                    div.column
+                      p Fat
+                    div.column
+                      p Salt
+                    div.column
+                      p Saturates
+                    div.column
+                      p Sugars
+                  div.equal.width.row
+                    div.column
+                      i.circle.icon(v-bind:style="{color: fatColorRecommendation}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: saltColorRecommendation}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: saturatesColorRecommendation}")
+                    div.column
+                      i.circle.icon(v-bind:style="{color: sugarsColorRecommendation}")
+              
+
+  //-         h3.imagecontent(v-if="upload_status==='uploading'") Uploading
+  //-         h3.imagecontent(v-if="upload_status==='success'") Uploading?
+  //- div.pusher(v-else-if="page==='receipe'")
+  //-   h5 {{receipe_title}} 
+  //-   <span v-html="receipe_content"></span>
+
+  div.pusher(v-else-if="page==='profile'")
+    .ui.equal.width.grid
+      .row
+        div.ui.cards#healthInfo
+          div.card
+            div.content
+              select.ui.dropdown(v-model="genderInput")
+                option#gender(disabled selected value="") Gender
+                option(value="male") Male
+                option(value="female") Female
+          div.card
+            div.content
+              div.header Age
+                div.ui.input
+                  input(type='text' placeholder="0" v-model="ageInput")
+          div.card#activity
+            div.content
+              div.header Activity
+              select.ui.dropdown(v-model="activityInput")
+                option(disabled selected value="") Activity
+                option(value="bmr") Basal Metabolic Rate (BMR)
+                option(value="sedentary") Sedentary - little or no exercise
+                option(value="lightlyActive") Light active - exercise/soprts (1-3 times/week)
+                option(value="moderatelyActive") Moderately active - exercise/sports (3-5 times/week)
+                option(value="veryActive") Very active - exercise/sports (6-7 times/week)
+                option(value="extraActive") Extra active - very hard exercise/sports (twice/day)
+      .row
+        div.ui.cards#healthInfo
+          div.card
+            div.content
+              div.header Height (cm)
+              div.ui.input
+                input(type='text' placeholder="0" v-model="heightInput")
+          div.card
+            div.content
+              div.header Weight (kg)
+              div.ui.input
+                input(type='text' placeholder="0" v-model="weightInput")
+          div.card
+            div.content
+              div.header BMI
+              div#bmi {{ bmi }}
+        button.huge.ui.button(@click='calculate_calories') Calculate
+          .br Calories
+      .row
+        table.ui.celled.table
+          tbody
+            td(data-label="category") To maintain your weight you need
+            td(data-label="calories") {{ to_maintain }} Kcal/day
+          tbody
+            td(data-label="category") To lose 0.5 kg per week you need
+            td(data-label="calories") {{ to_lose_half_kg }} Kcal/day
+          tbody
+            td(data-label="category") To lose 1 kg per week you need
+            td(data-label="calories") {{ to_lose_a_kg }} Kcal/day
 </template>
 
 
 <script>
-import 'semantic-ui-offline/semantic.min.css'
-import 'jquery'
-import $ from 'jquery'
+import axios from "axios";
+import "semantic-ui-offline/semantic.min.css";
+import "jquery";
+import $ from "jquery";
 
 export default {
-
   beforeDestory() {
-    document.removeEventListener('keyup', this.key)
+    document.removeEventListener("keyup", this.key);
   },
 
   created() {
-    document.addEventListener('keyup', this.key)
+    axios.get("/getImages").then(response => {
+      var img_list = JSON.parse(response.data.replace(/'/g, '"'));
+      var count = 0;
+      var tmp_img_list = [];
+      console.log(img_list.images);
+
+      for (var img of img_list.images) {
+        tmp_img_list.push({ url: "./media/img/" + img + "?t=" });
+        count++;
+      }
+      this.imgList = tmp_img_list;
+      this.numberOfImages = count;
+    });
+    document.addEventListener("keyup", this.key);
   },
 
-  data() { return {
-    title: "Inverse Cooking",
-  }},
+  data() {
+    return {
+      title: "Inverse Cooking",
+      recipe: 639824,
+      numberOfImages: 0,
+      foodName: 'Peanut butter chocolate chip cookies',
+      foodIngredient: "2 cup peanut butter, 2 cup sugar, 1 cup brown sugar, 2 whole egg, 2 teaspoon vanilla, 1 all - purpose flour, 1/2 cup cocoa, 1/4 teaspoon salt, 1/4 teaspoon baking soda, 1 semi - sweet chocolate chip, 1 chocolate chip",
+      fatInput: "orange",
+      saltInput: "green",
+      saturatesInput: "orange",
+      sugarsInput: "green",
+      foodNameRecommendation: 'Zucchini Bread - Bread Machine',
+      foodUrlRecommendation: 'http://www.food.com/recipe/zucchini-bread-bread-machine-409757',
+      fatInputRecommendation: 'green',
+      saltInputRecommendation: 'green',
+      saturatesInputRecommendation: 'green',
+      sugarsInputRecommendation: 'green',
+      page: "home",
+      card: "notuser",
+      file: "",
+      uploadPercentage: 0,
+      imgList: "",
+      upload_status: "waiting",
+      genderInput: "",
+      ageInput: "",
+      activityInput: "",
+      heightInput: "",
+      weightInput: "",
+      calories: "",
+      output: 0,
+      imagetitle : ""
+    };
+  },
+  computed: {
+    fatColor() {
+      var color = this.fatInput;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    saltColor() {
+      var color = this.saltInput;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    saturatesColor() {
+      var color = this.saturatesInput;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    sugarsColor() {
+      var color = this.sugarsInput;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    fatColorRecommendation() {
+      var color = this.fatInputRecommendation;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    saltColorRecommendation() {
+      var color = this.saltInputRecommendation;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    saturatesColorRecommendation() {
+      var color = this.saturatesInputRecommendation;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    sugarsColorRecommendation() {
+      var color = this.sugarsInputRecommendation;
+      if (color == 'green')
+        return "#14B259";
+      else if (color == 'orange')
+        return "#FFED51";
+      else if (color == 'red')
+        return "#E8142A";
+      else return "white";
+    },
+    bmi() {
+      var weight = this.weightInput;
+      var height = this.heightInput;
+      var formula = (weight / (height * height)) * 10000;
+      formula = formula.toFixed(2);
+      return formula;
+    },
+    to_maintain() {
+      var calories = 0,
+        bmr = 0;
+      var gender = this.genderInput;
+      var age = this.ageInput;
+      var activity = this.activityInput;
+      var height = this.heightInput;
+      var weight = this.weightInput;
 
+      if (gender == "male")
+        bmr = 88.362 + 13.397 * weight + 4.799 * height - 5.677 * age;
+      else if (gender == "female")
+        bmr = 447.593 + 9.247 * weight + 3.098 * height - 4.33 * age;
+      else bmr = 0;
+
+      if (activity == "bmr") calories = bmr;
+      else if (activity == "sedentary") calories = 1.2 * bmr;
+      else if (activity == "lightlyActive") calories = 1.375 * bmr;
+      else if (activity == "moderatelyActive") calories = 1.55 * bmr;
+      else if (activity == "veryActive") calories = 1.725 * bmr;
+      else if (activity == "extraActive") calories = 1.9 * bmr;
+      else calories = 0;
+
+      this.calories = calories;
+      return calories.toFixed(2);
+    },
+    to_lose_half_kg() {
+      var calories = this.calories - 500;
+      return calories.toFixed(2);
+    },
+    to_lose_a_kg() {
+      var calories = this.calories - 1000;
+      return calories.toFixed(2);
+    }
+  },
   methods: {
-  readURL : function (event) {
-    if (event.target.files[0].name) {
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        $('.image-upload-wrap').hide();
-        $('.file-upload-image').attr('src', e.target.result);
-        $('.file-upload-content').show();
-        $('.image-title').html(event.target.files[0].name);
-      };
-      reader.readAsDataURL(event.target.files[0]);
+
+    click_img(url) {
+      console.log("click!");
+      console.log(url);
+      let data = new FormData();
+      data.append("name", url);
+      axios
+        .post("/getSavedRecipe", data, {
+          headers: { Accept: "application/json" }
+        })
+        .then(response => {
+          console.log(response);
+          this.page = "upload";
+          this.show_image = 'history'
+          this.image_url = url
+
+          // $(".file-upload-image").attr("src",url);
+          // $(".file-upload-content").show()
+          var light_dict = {0:"green",1:"orange",2:"red"}
+          this.upload_status = "success";
+          console.log("success upload!");
+          this.foodName = response.data.output.title;
+          this.foodIngredient = response.data.output.recipe;
+          this.foodNameRecommendation = response.data.output.recommend_title;
+          this.foodUrlRecommendation = response.data.output.recommend_url;
+          this.fatInput = light_dict[response.data.lights.fat]
+          this.saltInput = light_dict[response.data.lights.salt]
+          this.saturatesInput = light_dict[response.data.lights.saturates]
+          this.sugarsInput = light_dict[response.data.lights.sugars]
+          this.fatInputRecommendation = response.data.output.recommend_lights[0]
+          this.saltInputRecommendation = response.data.output.recommend_lights[1]
+          this.saturatesInputRecommendation = response.data.output.recommend_lights[2]
+          this.sugarsInputRecommendation = response.data.output.recommend_lights[3]
+          this.imagetitle = url
+        });
+    },
+
+    submitFile() {
+      this.upload_status = "uploading";
+      let formData = new FormData();
+      // var f = Object.freeze(this.file)
+      // f.name = f.name.replace(/_/g,'')
+      // this.file.name = this.file.name.replace(/_/g,'')
+      formData.append("image", this.file); //required
+      console.log("form : ", formData.get("image"));
+
+      axios
+        .post("/upload", formData, {
+          headers: {
+            "X-CSRFToken": this.getCookie("csrftoken"),
+            Accept: "application/json"
+          },
+          onUploadProgress: function(progressEvent) {
+            this.uploadPercentage = parseInt(
+              Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            );
+          }.bind(this)
+        })
+        .then(response => {
+          console.log(response);
+
+          if (response.status == "200") {
+            var light_dict = {0:"green",1:"orange",2:"red"}
+            this.upload_status = "success";
+            console.log("success upload!");
+            $(".image-upload-wrap").hide();
+            this.foodName = response.data.output.title;
+            this.foodIngredient = response.data.output.recipe;
+            this.foodNameRecommendation = response.data.output.recommend_title;
+            this.foodUrlRecommendation = response.data.output.recommend_url;
+            this.fatInput = light_dict[response.data.lights.fat]
+            this.saltInput = light_dict[response.data.lights.salt]
+            this.saturatesInput = light_dict[response.data.lights.saturates]
+            this.sugarsInput = light_dict[response.data.lights.sugars]
+            this.fatInputRecommendation = response.data.output.recommend_lights[0]
+            this.saltInputRecommendation = response.data.output.recommend_lights[1]
+            this.saturatesInputRecommendation = response.data.output.recommend_lights[2]
+            this.sugarsInputRecommendation = response.data.output.recommend_lights[3]
+          }
+        });
+    },
+    handleFileUpload(event) {
+      this.file = this.$refs.file.files[0];
+      // this.file.name = this.file.name.replace(/_/g,'')
+      console.log(this.file.name)
+      var name = this.file.name
+      if (this.file) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          // this.imagetitle = name
+          $(".image-upload-wrap").hide();
+          $(".file-upload-image").attr("src", e.target.result);
+          $(".file-upload-content").show();
+          $(".image-title").html(name);
+        };
+        reader.readAsDataURL(this.file);
       } else {
-        console.log('pic name is empty !') 
+        console.log("pic name is empty !");
         removeUpload();
-    }},
+      }
+    },
+    addImage: function() {
+      $(".file-upload-input").trigger("click");
+    },
+    getCookie(name) {
+      var value = "; " + document.cookie;
+      var parts = value.split("; " + name + "=");
+      if (parts.length === 2)
+        return parts
+          .pop()
+          .split(";")
+          .shift();
+    },
+    show_upload() {
+      this.page = "upload";
+      this.show_image = 'upload';
+    },
+    show_home() {
+      this.card = "notuser"
+      this.page = "home";
+      this.show_image = 'home';
+      axios.get("/getImages").then(response => {
 
-    addImage : function () {
-    $('.file-upload-input').trigger( 'click' )
-    console.log('add image btn');
-  },
+        var img_list = JSON.parse(response.data.replace(/'/g, '"'));
+        var count = 0;
+        var tmp_img_list = [];
+        console.log(img_list.images);
+        for (var img of img_list.images) {
+          tmp_img_list.push({ url: "./media/img/" + img + "?t=" });
+          count++;
+        }
+        this.imgList = tmp_img_list;
+        this.numberOfImages = count;
+        this.upload_status = "waiting";
+      });
 
+    },
+    show_admin(){
+      window.location = 'http://merry.ee.ncku.edu.tw:10122/admin';
+    },
+    show_profile() {
+      this.page = "profile";
+    },
+    show_developer(){
+      this.card = "user";
+      this.page = "home"
+    },
+    calculate_calories() {
+      var calories = 0,
+        bmr = 0;
+      var gender = this.genderInput;
+      var age = this.ageInput;
+      var activity = this.activityInput;
+      var height = this.heightInput;
+      var weight = this.weightInput;
+
+      if (gender == 'male')
+        bmr = 88.362 + (13.397*weight) + (4.799*height) - (5.677*age);
+      else if (gender == 'female')
+        bmr = 447.593 + (9.247*weight) + (3.098*height) - (4.330*age);
+
+      else bmr = 0;
+
+      if (activity == "bmr") calories = bmr;
+      else if (activity == "sedentary") calories = 1.2 * bmr;
+      else if (activity == "lightlyActive") calories = 1.375 * bmr;
+      else if (activity == "moderatelyActive") calories = 1.55 * bmr;
+      else if (activity == "veryActive") calories = 1.725 * bmr;
+      else if (activity == "extraActive") calories = 1.9 * bmr;
+      else calories = 0;
+
+      this.calories = calories;
+    },
     removeUpload : function () {
       $('.file-upload-content').hide();
       $('.image-upload-wrap').show();
       $('.file-upload-input').show()
       
-  }}}
-
-
+    }
+  }
+};
 </script>
 
 <style lang="sass">
-.file-upload
-  background-color: #ffffff
-  width: 600px
-  margin: 0 auto
-  padding: 20px
+  
+.ui.visible.sidebar.left.inverted.vertical.menu
+  background-color: rgba(19, 163, 165, 0.8)
 
-.file-upload-btn
-  width: 100%
-  margin: 0
-  color: #fff
-  background: #1FB264
-  border: none
-  padding: 10px
-  border-radius: 4px
-  border-bottom: 4px solid #15824B
-  transition: all .2s ease
-  outline: none
-  text-transform: uppercase
+h1
+  color : #F2F2EF
+
+.ui.item
+  color: #F2F2EF
+  font-family: 'Dosis', sans-serif
+  font-size: 20px
   font-weight: 700
 
-.file-upload-btn:hover
-  background: #1AA059
-  color: #ffffff
-  transition: all .2s ease
-  cursor: pointer
+h2
+  color : #403833
+  font-family: 'Dosis', sans-serif
+  font-weight: 500
+  text-align: center
 
+h3
+  color : #403833
+  text-align: center
+
+.imagecontent
+  color: #FFF 
+
+.title
+  padding: 20px 0 0 0
+  text-align: center 
+
+#title_text
+  font-family: 'Kalam', cursive
+  margin: 5px 0
+
+body
+  background-attachment: fixed
+  background-image: url(https://images.unsplash.com/photo-1472393365320-db77a5abbecc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=2850&q=80)
+  background-size: cover
+  height: 100vh
+  width: 100vw  
+
+.ui.link.card
+  background-color: rgba(242, 242, 239, 0.9)
+  border: 1px solid rgba(64, 56, 51, 0.2)
+  border-radius: 0
+  padding: 15px 15px 60px 15px
+
+.ui.link.card:hover
+  background-color: #F2F2EF
+  border: 1px solid rgba(64, 56, 51, 0.2)
+
+.file-upload
+  background-color: #262626
+  margin: 20px auto
+  width: 600px
+  
+.file-upload-btn
+  background: #13A3A5
+  border: none
+  border-radius: 4px
+  color: #F2F2EF
+  font-weight: 700
+  margin: 0
+  outline: none
+  padding: 10px
+  text-transform: uppercase
+  transition: all .2s ease
+  width: 100%
+  
+.file-upload-btn:hover
+  background: #13A3A5
+  color: #403833
+  cursor: pointer
+  transition: all .2s ease
+  
 .file-upload-btn:active
   border: 0
   transition: all .2s ease
@@ -101,65 +673,154 @@ export default {
   text-align: center
 
 .file-upload-input
-  position: absolute
-  margin: 0
-  padding: 0
-  width: 100%
-  height: 100%
-  outline: none
-  opacity: 0
   cursor: pointer
-
+  font-color: #262626
+  height: 100%
+  margin: 0
+  opacity: 0
+  outline: none
+  padding: 0
+  position: absolute
+  width: 100%
+  
 .image-upload-wrap
+  background: rgba(242, 242, 239, 0.7)
+  border: 2px dashed #403833
   margin-top: 20px
-  border: 4px dashed #1FB264
   position: relative
 
 .image-dropping,.image-upload-wrap:hover
-  background-color: #1FB264
-  border: 4px dashed #ffffff
+  background-color: #F2F2EF
+  border: 2px dashed #403833
 
 .image-title-wrap
-  padding: 0 15px 15px 15px
   color: #222
+  font-size: 40px
+  padding: 0 15px 15px 15px
+
+.image-title
+  color: #403833
+  font-family: 'Raleway', sans-serif
+  font-size: 25px
 
 .drag-text
   text-align: center
 
 .drag-text h3
-  font-weight: 100
-  text-transform: uppercase
-  color: #15824B
+  color: #403833
+  font-family: 'Dosis', sans-serif
   padding: 60px 0
+  text-transform: uppercase
 
 .file-upload-image
+  margin: auto
   max-height: 200px
   max-width: 200px
-  margin: auto
   padding: 20px
 
-.remove-image
-  width: 200px
-  margin: 0
-  color: #fff
-  background: #cd4535
+#foodDetail
+  background: rgba(242, 242, 239, 0.8)
+  margin: 0 auto
+  width: 80vw
+
+#foodDetail column
+  padding: 0
+  text-align: center
+
+#foodDetail h3
+  color: #13A3A5
+  font-family: 'Raleway', sans-serif
+  font-size: 25px
+
+#foodDetail p, #foodDetail a
+  color: #403833
+  font-family: 'Raleway', sans-serif
+  font-size: 20px
+  text-align: center
+
+#foodDetail #foodIngredient
+  text-align: left
+
+#foodDetail i.circle.icon
+  display: block
+  font-size: 25px
+  margin: 0 auto
+  width: 100%
+
+#healthInfo .card .header
+  color: #E54E45
+  font-family: 'Dosis', sans-serif
+  font-size: 25px
+  font-weight: 600
+  text-align: center
+
+#healthInfo .card .header i
+  font-size: 15px
+  margin-left: 5px
+
+#healthInfo .card select
+  background: transparent
   border: none
-  padding: 10px
-  border-radius: 4px
-  border-bottom: 4px solid #b02818
-  transition: all .2s ease
-  outline: none
-  text-transform: uppercase
-  font-weight: 700
+  font-color: #403833
+  font-family: 'Raleway', sans-serif
+  font-size: 20px
+  height: 30px
+  margin-left: 30%
+  margin-right: 30%
+  margin-top: 20px
+  padding: 0
+  width: 40%
 
-.remove-image:hover
-  background: #c13b2a
-  color: #ffffff
-  transition: all .2s ease
-  cursor: pointer
+#healthInfo .card select #gender
+  color: #E54E45
 
-.remove-image:active
-  border: 0
-  transition: all .2s ease
-</style> // }}}
+#healthInfo .card .input
+  margin-left: 20%
+  margin-right: 20%
+  width: 60%
+
+#healthInfo .card .input input
+  background: #F2F2EF
+  border: none
+  color: #403833
+  font-family: 'Raleway', sans-serif
+  font-size: 25px
+  padding-top: 10px
+  text-align: center
+
+#healthInfo #activity select
+  margin-left: 0
+  margin-top: 10px
+  width: 100%
+
+#bmi
+  color: #403833
+  font-family: 'Raleway', sans-serif
+  font-size: 25px
+  padding-top: 10px
+  text-align: center
+
+.huge.ui.button
+  background: rgba(19, 163, 165, 0.7)
+  border: 2px solid #13A3A5
+  font-family: 'Dosis', sans-serif
+  font-size: 20px
+  height: 80px
+  margin-left: 0.8em
+  margin-top: 30px
+  text-color: #403833
+
+.huge.ui.button:hover
+  background: rgba(19, 163, 165, 0.9)
+
+.row .ui.celled.table
+  margin-left: 30px
+  width: 65%
+
+.ui.table td
+  color: #403833
+  font-family: 'Raleway', sans-serif
+  font-size: 20px
+  
+</style>
 

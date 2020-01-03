@@ -12,9 +12,14 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
@@ -25,7 +30,9 @@ SECRET_KEY = 'nnip(cvwsspnzpa9x1+$_!4v#3r$@dvi%_m9sx2nlf5b^u-xoh'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['merry.ee.ncku.edu.tw', 'localhost','140.116.72.90']
+
+ALLOWED_HOSTS = ['merry.ee.ncku.edu.tw', 'localhost', 'yichen.ee.ncku.edu.tw']
+
 
 
 # Application definition
